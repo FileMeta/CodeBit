@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using FileMeta;
+using System.IO;
 using Bredd;
 
 namespace CodeBit
@@ -17,6 +14,7 @@ namespace CodeBit
 ";
 
         static Action s_operation;
+        static string s_target;
 
         static void Main(string[] args)
         {
@@ -42,10 +40,17 @@ namespace CodeBit
 
         static void ParseCommandLine()
         {
+            bool getTarget = false;
+
             var cl = new CommandLineLexer();
             // Get the command
             switch (cl.ReadNextArg()?.ToLowerInvariant())
             {
+                case "validate":
+                    s_operation = Validate;
+                    getTarget = true;
+                    break;
+
                 case "getversion":
                     s_operation = GetVersion;
                     break;
@@ -73,6 +78,11 @@ namespace CodeBit
                     return;
             }
 
+            if (getTarget)
+            {
+                s_target = cl.ReadNextArg();
+            }
+
             while (cl.MoveNext())
             {
                 cl.ThrowIfNotOption();
@@ -82,6 +92,48 @@ namespace CodeBit
                         cl.ThrowUnexpectedArgError();
                         break;
                 }
+            }
+        }
+
+        static void Validate()
+        {
+            try
+            {
+                var path = Path.GetFullPath(s_target);
+                Console.WriteLine($"Validing CodeBit metadata in '{path}'...");
+                using (var reader = new StreamReader(path, Encoding.UTF8, true))
+                {
+                    (CodeBitMetadata metadata, ValidationLevel validationLevel, string validationDetail)
+                        = CodeBitMetadata.ReadAndValidate(reader);
+
+                    if (validationLevel == ValidationLevel.PassMandatory)
+                    {
+                        Console.WriteLine("Warning: CodeBit fails one or more recommended but optional requirements:");
+                        Console.WriteLine(validationDetail);
+                    }
+                    else if (validationLevel != ValidationLevel.Pass)
+                    {
+                        Console.WriteLine("CodeBit fails one or more mandatory requirements:");
+                        Console.WriteLine(validationDetail);
+                    }
+
+                    Console.WriteLine("name: " + metadata.Name);
+                    Console.WriteLine("version: " + metadata.Version);
+                    Console.WriteLine("url: " + metadata.Url);
+                    Console.WriteLine("datePublished: " + metadata.DatePublished.ToString("O"));
+                    Console.WriteLine("author: " + metadata.Author);
+                    Console.WriteLine("description: " + metadata.Description);
+                    Console.WriteLine("license: " + metadata.License);
+                    Console.WriteLine("keywords: " + String.Join("; ", metadata.Keywords));
+                    foreach(var pair in metadata.OtherProperties)
+                    {
+                        Console.WriteLine(String.Concat(pair.Key + ": " + pair.Value));
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine($"Failed to read and parse CodeBit: {err.Message}");
             }
         }
 
