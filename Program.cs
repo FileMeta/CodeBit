@@ -126,7 +126,7 @@ namespace CodeBit
                     Console.WriteLine("name: " + metadata.Name);
                     Console.WriteLine("version: " + metadata.Version);
                     Console.WriteLine("url: " + metadata.Url);
-                    Console.WriteLine("datePublished: " + metadata.DatePublished.ToString("O"));
+                    Console.WriteLine("datePublished: " + metadata.DatePublished.ToStringConcise());
                     Console.WriteLine("author: " + metadata.Author);
                     Console.WriteLine("description: " + metadata.Description);
                     Console.WriteLine("license: " + metadata.License);

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using FileMeta;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace CodeBit
 {
@@ -21,7 +22,7 @@ namespace CodeBit
         /// Meets all mandatory specifications. but fails 
         /// at least one recommended requirement
         /// </summary>
-        PassMandatory = 1,
+        PassMandatory = 1, // Also means FailRecommended
 
         /// <summary>
         /// Fails at least one mandatory requirement
@@ -201,6 +202,20 @@ namespace CodeBit
             ReportIfEmpty(metadata.Author, "author", false, ref validationLevel, validationDetail);
             ReportIfEmpty(metadata.Description, "description", false, ref validationLevel, validationDetail);
             ReportIfEmpty(metadata.License, "license", false, ref validationLevel, validationDetail);
+            if (!string.IsNullOrEmpty(datePublishedStr))
+            {
+                if (DateTimeOffset.TryParse(datePublishedStr, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal|DateTimeStyles.RoundtripKind,
+                    out DateTimeOffset date))
+                {
+                    metadata.DatePublished = date;
+                }
+                else
+                {
+                    validationLevel |= ValidationLevel.PassMandatory; // Means FailRecommended
+                    validationDetail.AppendLine("Invalid datePublished value.");
+                }
+            }
 
             return (metadata, validationLevel, validationDetail.ToString());
         }
@@ -215,7 +230,7 @@ namespace CodeBit
         {
             if (!string.IsNullOrEmpty(value)) return false;
 
-            validationLevel |= isMandatory ? ValidationLevel.FailMandatory : ValidationLevel.PassMandatory;
+            validationLevel |= isMandatory ? ValidationLevel.FailMandatory : ValidationLevel.PassMandatory; // PassMandatory means FailRecommended
             validationDetail.AppendLine($"{(isMandatory ? "Mandatory" : "Optional")} property '{propName}' is not present.");
             return true;
         }

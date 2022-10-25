@@ -46,6 +46,7 @@
     <Compile Include="CodeBits\AssemblyMetadata.cs" />
     <Compile Include="CodeBits\CommandLineLexer.cs" />
     <Compile Include="CodeBits\MetaTag.cs" />
+    <Compile Include="Helpers.cs" />
     <Compile Include="Models\CodeBitMetadata.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
