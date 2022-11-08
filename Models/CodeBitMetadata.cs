@@ -88,6 +88,26 @@ namespace CodeBit
         /// </summary>
         public IDictionary<string, string> OtherProperties => m_otherProperties;
 
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(Name)) sb.AppendLine("name: " + Name);
+            if (!string.IsNullOrEmpty(Version)) sb.AppendLine("version: " + Version);
+            if (!string.IsNullOrEmpty(Url)) sb.AppendLine("url: " + Url);
+            if (DatePublished > DateTimeOffset.MinValue) sb.AppendLine("datePublished: " + DatePublished.ToStringConcise());
+            if (!string.IsNullOrEmpty(Author)) sb.AppendLine("author: " + Author);
+            if (!string.IsNullOrEmpty(Description)) sb.AppendLine("description: " + Description);
+            if (!string.IsNullOrEmpty(License)) sb.AppendLine("license: " + License);
+            if (Keywords.Count > 0) sb.AppendLine("keywords: " + String.Join("; ", Keywords));
+            foreach (var pair in OtherProperties)
+            {
+                sb.Append(pair.Key);
+                sb.Append(": ");
+                sb.AppendLine(pair.Value);
+            }
+            return sb.ToString();
+        }
+
         // Regular expression to detect and parse semantic versioning
         static Regex s_rxSemVer = new Regex(@"^(?<major>0|[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>0|[1-9]\d*)(?:-(?<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$", RegexOptions.CultureInvariant);
 

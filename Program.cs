@@ -32,7 +32,7 @@ namespace CodeBit
 #if DEBUG
             if (Debugger.IsAttached)
             {
-                Console.WriteLine("Press any key to exit.");
+                Console.Write("\nPress any key to exit.");
                 Console.ReadKey();
             }
 #endif
@@ -97,50 +97,7 @@ namespace CodeBit
 
         static void Validate()
         {
-            try
-            {
-                var path = Path.GetFullPath(s_target);
-                Console.WriteLine($"Validating CodeBit metadata in '{path}'...");
-                using (var reader = new StreamReader(path, Encoding.UTF8, true))
-                {
-                    (CodeBitMetadata metadata, ValidationLevel validationLevel, string validationDetail)
-                        = CodeBitMetadata.ReadAndValidate(reader);
-
-                    if (validationLevel == ValidationLevel.Pass)
-                    {
-                        Console.WriteLine("CodeBit metadata passes validation.");
-                    }
-                    else if (validationLevel == ValidationLevel.PassMandatory)
-                    {
-                        Console.WriteLine("Warning: CodeBit fails one or more recommended but optional requirements:");
-                        Console.WriteLine(validationDetail);
-                    }
-                    else
-                    {
-                        Console.WriteLine("CodeBit fails one or more mandatory requirements:");
-                        Console.WriteLine(validationDetail);
-                    }
-
-                    Console.WriteLine();
-
-                    Console.WriteLine("name: " + metadata.Name);
-                    Console.WriteLine("version: " + metadata.Version);
-                    Console.WriteLine("url: " + metadata.Url);
-                    Console.WriteLine("datePublished: " + metadata.DatePublished.ToStringConcise());
-                    Console.WriteLine("author: " + metadata.Author);
-                    Console.WriteLine("description: " + metadata.Description);
-                    Console.WriteLine("license: " + metadata.License);
-                    Console.WriteLine("keywords: " + String.Join("; ", metadata.Keywords));
-                    foreach(var pair in metadata.OtherProperties)
-                    {
-                        Console.WriteLine(String.Concat(pair.Key + ": " + pair.Value));
-                    }
-                }
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine($"Failed to read and parse CodeBit: {err.Message}");
-            }
+            CodeBitValidator.ValidateFile(s_target);
         }
 
         static void GetSyntax()
