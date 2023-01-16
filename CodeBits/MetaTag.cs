@@ -196,7 +196,7 @@ namespace FileMeta
 
         static readonly char[] c_quoteRequiringChars = new char[]
             {
-                '\r', '\n', '\t', ' ', '"'
+                '\r', '\n', '\t', ' ', '"', ';', '[', ']', '{', '}', '&', ','
             };
 
         /// <summary>
@@ -421,7 +421,7 @@ namespace FileMeta
                 }
             }
 
-            object IEnumerator.Current => Current;
+            object IEnumerator.Current => throw new NotImplementedException();
 
             public void Dispose()
             {
