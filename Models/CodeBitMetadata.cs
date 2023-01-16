@@ -19,10 +19,9 @@ namespace CodeBit
         Pass = 0,
 
         /// <summary>
-        /// Meets all mandatory specifications. but fails 
-        /// at least one recommended requirement
+        /// Failes at least one recommend requirement
         /// </summary>
-        PassMandatory = 1, // Also means FailRecommended
+        FailRecommended = 1,
 
         /// <summary>
         /// Fails at least one mandatory requirement
@@ -38,55 +37,85 @@ namespace CodeBit
     /// <summary>
     /// Model class for CodeBit metadata
     /// </summary>
-    internal class CodeBitMetadata
+    internal class CodeBitMetadata : FlatMetadata
     {
-        List<string> m_keywords = new List<string>();
-        Dictionary<string, string> m_otherProperties = new Dictionary<string, string>();
+        const string keyword_codebit = "CodeBit";
+        const string key_name = "name";
+        const string key_version = "version";
+        const string key_url = "url";
+        const string key_keywords = "keywords";
+        const string key_datePublished = "datepublished";
+        const string key_author = "author";
+        const string key_description = "description";
+        const string key_license = "license";
+
+        static IReadOnlyCollection<string> s_standardKeys = new HashSet<string>
+        {
+            key_name,
+            key_version,
+            key_url,
+            key_keywords,
+            key_datePublished,
+            key_author,
+            key_description,
+            key_license
+        };
 
         /// <summary>
         /// Name of the CodeBit (optional, may be Null)
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get => GetValue(key_name); set => SetValue(key_name, value); }
 
         /// <summary>
         /// Version of the CodeBit (required)
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get => GetValue(key_version); set => SetValue(key_version, value); }
 
         /// <summary>
         /// URL of the CodeBit (required)
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get => GetValue(key_url); set => SetValue(key_url, value); }
 
         /// <summary>
         /// Keywords of the CodeBit (must include "CodeBit")
         /// </summary>
-        public List<string> Keywords => m_keywords;
+        public IList<string> Keywords => GetValues(key_keywords, true);
 
         /// <summary>
-        /// DatePublished of the CodeBit (optional, may be DateTimeOffset.MinValue)
+        /// Date the CodeBit was published
         /// </summary>
-        public DateTimeOffset DatePublished { get; set; }
+        /// <remarks>Optional. Value will be <see cref="DateTimeOffset.MinValue"/> if
+        /// the property is absent or if the string form is invalid.
+        /// </remarks>
+        public DateTimeOffset DatePublished { get => GetValueAsDate(key_datePublished); set => SetValue(key_datePublished, value); }
+
+        /// <summary>
+        /// Date the CodeBit was published
+        /// </summary>
+        /// <remarks>Optional. Value will be <see cref="DateTimeOffset.MinValue"/> if
+        /// the property is absent or if the string form is invalid.
+        /// </remarks>
+        public string DatePublishedStr { get => GetValue(key_datePublished); set => SetValue(key_datePublished, value); }
 
         /// <summary>
         /// Author of the CodeBit (optional, may be null)
         /// </summary>
-        public string Author { get; set; }
+        public string Author { get => GetValue(key_author); set => SetValue(key_author, value); }
 
         /// <summary>
         /// Description of the CodeBut (optional, may be null)
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get => GetValue(key_description); set => SetValue(key_description, value); }
 
         /// <summary>
         /// License URL of the CodeBit (optional, may be null)
         /// </summary>
-        public string License { get; set; }
+        public string License { get => GetValue(key_license); set => SetValue(key_license, value); }
 
         /// <summary>
-        /// All other properties (optional, may be empty)
+        /// Filename from which the metadata was read. Used only for validation.
         /// </summary>
-        public IDictionary<string, string> OtherProperties => m_otherProperties;
+        public string FilenameForValidation { get; set; }
 
         public override string ToString()
         {
@@ -94,107 +123,60 @@ namespace CodeBit
             if (!string.IsNullOrEmpty(Name)) sb.AppendLine("name: " + Name);
             if (!string.IsNullOrEmpty(Version)) sb.AppendLine("version: " + Version);
             if (!string.IsNullOrEmpty(Url)) sb.AppendLine("url: " + Url);
-            if (DatePublished > DateTimeOffset.MinValue) sb.AppendLine("datePublished: " + DatePublished.ToStringConcise());
+            if (!string.IsNullOrEmpty(DatePublishedStr)) sb.AppendLine("datePublished: " + DatePublishedStr);
             if (!string.IsNullOrEmpty(Author)) sb.AppendLine("author: " + Author);
             if (!string.IsNullOrEmpty(Description)) sb.AppendLine("description: " + Description);
             if (!string.IsNullOrEmpty(License)) sb.AppendLine("license: " + License);
             if (Keywords.Count > 0) sb.AppendLine("keywords: " + String.Join("; ", Keywords));
-            foreach (var pair in OtherProperties)
+            foreach (var pair in this)
             {
-                sb.Append(pair.Key);
-                sb.Append(": ");
-                sb.AppendLine(pair.Value);
+                if (s_standardKeys.Contains(pair.Key)) continue;
+                if (pair.Value == null) continue;
+                foreach(var value in pair.Value)
+                {
+                    sb.Append(pair.Key);
+                    sb.Append(": ");
+                    sb.AppendLine(value);
+                }
             }
             return sb.ToString();
         }
 
+        // Regular expression snippet for a domain name
+        const string c_rxDomainName = @"(?:[A-Za-z0-9-_]+)(?:\.[A-Za-z0-9-_]+)+";
+
+        // Regular expression snippet for a filename (not a path - no slashes)
+        const string c_rxFilename = @"[^/\\><\|:&""*? \r\n]{1,128}";
+
+        // Regular expression to match a codebit name which must be a domain name followed by
+        // a filename path (zero or more directory names concluding with a filename).
+        static Regex s_rxName = new Regex("^(?:" + c_rxDomainName + ")(?:/" + c_rxFilename + ")*/(" + c_rxFilename + ")$");
+
+        // (?:(?:[A-Za-z0-9-_]+)(?:\.[A-Za-z0-9-_]+)+)/(?:[^/\\><\|:&""*? \r\n]{1,128})*/([^/\\><\|:&""*? \r\n]{1,128})
+
         // Regular expression to detect and parse semantic versioning
         static Regex s_rxSemVer = new Regex(@"^(?<major>0|[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>0|[1-9]\d*)(?:-(?<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$", RegexOptions.CultureInvariant);
 
-        /// <summary>
-        /// Read and validate a CodeBit
-        /// </summary>
-        /// <param name="reader">A <see cref="TextReader"/> from which to read the CodeBit.</param>
-        /// <returns>A <see cref="CodeBit"/> instance, a <see cref="ValidationLevel"/>, and a string containing validation detail.</returns>
-        public static (CodeBitMetadata metadata, ValidationLevel validationLevel, string validationDetail) ReadAndValidate(TextReader reader)
+        public (ValidationLevel validationLevel, string validationDetail) Validate()
         {
-            var metadata = new CodeBitMetadata();
             var validationLevel = ValidationLevel.Pass;
             var validationDetail = new StringBuilder();
-            string datePublishedStr = null;
 
-            // TODO: Rewrite the MetaTag class to parse a TextReader - it will be much faster and won't consume so much memory
-            foreach (var tag in MetaTag.Extract(reader.ReadToEnd()))
+            // === Required Properties ===
+
+            if (ValidateRequiredSingle(key_name, ref validationLevel, validationDetail))
             {
-                switch (tag.Key)
+                var match = s_rxName.Match(Name);
+                if (!match.Success)
                 {
-                    // === Required Properties ===
-                    case "version":
-                        if (metadata.Version == null) // Only keep the first instance
-                            metadata.Version = tag.Value;
-                        else
-                            ReportMultiple("version", ref validationLevel, validationDetail);
-                        break;
-
-                    case "url":
-                        if (metadata.Url == null)
-                            metadata.Url = tag.Value;
-                        else
-                            ReportMultiple("url", ref validationLevel, validationDetail);
-                        break;
-
-                    case "keywords":
-                        metadata.Keywords.Add(tag.Value);
-                        break;
-
-                    // Recommended properties
-                    case "name":
-                        if (metadata.Name == null)
-                            metadata.Name = tag.Value;
-                        else
-                            ReportMultiple("name", ref validationLevel, validationDetail);
-                        break;
-
-                    case "datePublished":
-                        if (datePublishedStr == null)
-                            datePublishedStr = tag.Value;
-                        else
-                            ReportMultiple("datePublished", ref validationLevel, validationDetail);
-                        break;
-
-                    case "author":
-                        if (metadata.Author == null)
-                            metadata.Author = tag.Value;
-                        else
-                            ReportMultiple("author", ref validationLevel, validationDetail);
-                        break;
-
-                    case "description":
-                        if (metadata.Description == null)
-                            metadata.Description = tag.Value;
-                        else
-                            ReportMultiple("description", ref validationLevel, validationDetail);
-                        break;
-
-                    case "license":
-                        if (metadata.License == null)
-                            metadata.License = tag.Value;
-                        else
-                            ReportMultiple("license", ref validationLevel, validationDetail);
-                        break;
-
-                    default:
-                        if (!metadata.OtherProperties.ContainsKey(tag.Key))
-                            metadata.OtherProperties.Add(tag);
-                        // Don't report an error on duplicate. Depending on the metadata it may be valid.
-                        break;
+                    validationLevel |= ValidationLevel.FailMandatory;
+                    validationDetail.AppendLine("Property 'name' must be a domain name followed by a file path.");
                 }
             }
 
-            // === Validate Required Properties ===
-            if (!ReportIfEmpty(metadata.Version, "version", true, ref validationLevel, validationDetail))
+            if (ValidateRequiredSingle(key_version, ref validationLevel, validationDetail))
             {
-                var match = s_rxSemVer.Match(metadata.Version);
+                var match = s_rxSemVer.Match(Version);
                 if (!match.Success)
                 {
                     validationLevel |= ValidationLevel.FailMandatory;
@@ -202,56 +184,88 @@ namespace CodeBit
                 }
             }
 
-            if (!ReportIfEmpty(metadata.Url, "url", true, ref validationLevel, validationDetail))
+            if (ValidateRequiredSingle(key_url, ref validationLevel, validationDetail))
             {
-                if (!Uri.TryCreate(metadata.Url, UriKind.Absolute, out Uri uri))
+                if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri uri))
                 {
                     validationLevel |= ValidationLevel.FailMandatory;
                     validationDetail.AppendLine("'url' property is not a valid URL.");
                 }
             }
 
-            if (!metadata.Keywords.Contains("codebit", StringComparer.OrdinalIgnoreCase))
+            if (!Keywords.Contains(keyword_codebit))
             {
                 validationLevel |= ValidationLevel.FailMandatory;
-                validationDetail.AppendLine("'keywords' property with 'CodeBit' value not found.");
+                validationDetail.AppendLine($"Property '{key_keywords}' must include '{keyword_codebit}'.");
             }
 
-            // === Validate Recommended Properties
-            ReportIfEmpty(metadata.Name, "name", false, ref validationLevel, validationDetail);
-            ReportIfEmpty(metadata.Author, "author", false, ref validationLevel, validationDetail);
-            ReportIfEmpty(metadata.Description, "description", false, ref validationLevel, validationDetail);
-            ReportIfEmpty(metadata.License, "license", false, ref validationLevel, validationDetail);
-            if (!string.IsNullOrEmpty(datePublishedStr))
+            // === Optional Properties ===
+            if (ValidateOptionalSingle(key_description, ref validationLevel, validationDetail))
             {
-                if (DateTimeOffset.TryParse(datePublishedStr, CultureInfo.InvariantCulture,
-                    DateTimeStyles.AssumeUniversal|DateTimeStyles.RoundtripKind,
-                    out DateTimeOffset date))
+                if (DatePublishedStr != null && DatePublished == DateTime.MinValue)
                 {
-                    metadata.DatePublished = date;
-                }
-                else
-                {
-                    validationLevel |= ValidationLevel.PassMandatory; // Means FailRecommended
-                    validationDetail.AppendLine("Invalid datePublished value.");
+                    validationLevel |= ValidationLevel.FailRecommended;
+                    validationDetail.AppendLine("Property 'datePublished' is an invalid format. Must be RFC 3339");
                 }
             }
 
-            return (metadata, validationLevel, validationDetail.ToString());
+            ValidateOptionalSingle(key_author, ref validationLevel, validationDetail);
+            ValidateOptionalSingle(key_description, ref validationLevel, validationDetail);
+            ValidateOptionalSingle(key_license, ref validationLevel, validationDetail);
+
+            return (validationLevel, validationDetail.ToString());
         }
 
-        private static void ReportMultiple(string propertyName, ref ValidationLevel validationLevel, StringBuilder validationDetail)
+        /// <summary>
+        /// Read CodeBit
+        /// </summary>
+        /// <param name="reader">A <see cref="TextReader"/> from which to read the CodeBit.</param>
+        /// <returns>A <see cref="CodeBit"/> instance that has not been validated.</returns>
+        /// <remarks>Use <see cref="Validate"/> to validate the metadata read from the TextReader.</remarks>
+        public static CodeBitMetadata Read(TextReader reader)
         {
-            validationLevel |= ValidationLevel.PassMandatory;
-            validationDetail.AppendLine($"Multiple instances of '{propertyName}' propoerty.");
+            var metadata = new CodeBitMetadata();
+
+            // TODO: Rewrite the MetaTag class to parse a TextReader - it will be much faster and won't consume so much memory
+            foreach (var tag in MetaTag.Extract(reader.ReadToEnd()))
+            {
+                metadata.AddValue(tag.Key, tag.Value);
+            }
+
+            return metadata;
         }
 
-        private static bool ReportIfEmpty(string value, string propName, bool isMandatory, ref ValidationLevel validationLevel, StringBuilder validationDetail)
+        bool ValidateRequiredSingle(string propertyName, ref ValidationLevel validation, StringBuilder validationDetail)
         {
-            if (!string.IsNullOrEmpty(value)) return false;
+            var values = GetValues(propertyName);
+            if (values == null || values.Count == 0)
+            {
+                validation |= ValidationLevel.FailMandatory;
+                validationDetail.AppendLine($"Property '{propertyName}' is required but not present.");
+                return false;
+            }
+            if (values.Count > 1)
+            {
+                validation |= ValidationLevel.FailRecommended;
+                validationDetail.AppendLine($"Multiple instances of property '{propertyName}'. Only one expected.");
+                return false;
+            }
+            return true;
+        }
 
-            validationLevel |= isMandatory ? ValidationLevel.FailMandatory : ValidationLevel.PassMandatory; // PassMandatory means FailRecommended
-            validationDetail.AppendLine($"{(isMandatory ? "Mandatory" : "Optional")} property '{propName}' is not present.");
+        bool ValidateOptionalSingle(string propertyName, ref ValidationLevel validation, StringBuilder validationDetail)
+        {
+            var values = GetValues(propertyName);
+            if (values == null || values.Count == 0)
+            {
+                return false;
+            }
+            if (values.Count > 1)
+            {
+                validation |= ValidationLevel.FailRecommended;
+                validationDetail.AppendLine($"Multiple instances of property '{propertyName}'. Only one expected.");
+                return false;
+            }
             return true;
         }
 

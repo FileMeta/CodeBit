@@ -22,14 +22,15 @@ namespace CodeBit
             {
                 using (var reader = new StreamReader(path, Encoding.UTF8, true))
                 {
-                    (metadata, validationLevel, validationDetail) = CodeBitMetadata.ReadAndValidate(reader);
+                    metadata = CodeBitMetadata.Read(reader);
+                    (validationLevel, validationDetail) = metadata.Validate();
                 }
 
                 if (validationLevel == ValidationLevel.Pass)
                 {
                     Console.WriteLine("CodeBit metadata passes validation.");
                 }
-                else if (validationLevel == ValidationLevel.PassMandatory)
+                else if (validationLevel == ValidationLevel.FailRecommended)
                 {
                     Console.WriteLine("Warning: CodeBit fails one or more recommended but optional requirements:");
                     Console.WriteLine(validationDetail);
@@ -43,7 +44,7 @@ namespace CodeBit
                 Console.WriteLine();
                 Console.Write(metadata.ToString());
                 Console.WriteLine();
-                if (validationLevel > ValidationLevel.PassMandatory) return;
+                if (validationLevel > ValidationLevel.FailRecommended) return;
             }
             catch (Exception err)
             {
@@ -61,17 +62,18 @@ namespace CodeBit
             {
                 using (var reader = new StreamReader(Http.Get(metadata.Url), Encoding.UTF8, true, 512, false))
                 {
-                    (pubMetadata, pubValidationLevel, pubValidationDetail) = CodeBitMetadata.ReadAndValidate(reader);
+                    pubMetadata = CodeBitMetadata.Read(reader);
+                    (pubValidationLevel, pubValidationDetail) = pubMetadata.Validate();
                 }
 
                 if (pubValidationLevel == ValidationLevel.Pass)
                 {
                     Console.WriteLine("Published CodeBit metadata passes validation.");
                 }
-                else if (pubValidationLevel == ValidationLevel.PassMandatory)
+                else if (pubValidationLevel == ValidationLevel.FailRecommended)
                 {
                     Console.WriteLine("Warning: Published CodeBit fails one or more recommended but optional requirements:");
-                    Console.WriteLine(pubValidationDetail);
+                    Console.Write(pubValidationDetail);
                 }
                 else
                 {
@@ -79,7 +81,7 @@ namespace CodeBit
                     Console.Write(pubValidationDetail);
                 }
 
-                if (validationLevel > ValidationLevel.PassMandatory) return;
+                if (validationLevel > ValidationLevel.FailRecommended) return;
             }
             catch (Exception err)
             {

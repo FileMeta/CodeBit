@@ -45,9 +45,9 @@
   <ItemGroup>
     <Compile Include="CodeBits\AssemblyMetadata.cs" />
     <Compile Include="CodeBits\CommandLineLexer.cs" />
+    <Compile Include="CodeBits\Metadata.cs" />
     <Compile Include="CodeBits\MetaTag.cs" />
     <Compile Include="CodeBitValidator.cs" />
-    <Compile Include="Helpers.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="Models\CodeBitMetadata.cs" />
     <Compile Include="Program.cs" />

@@ -1,7 +1,7 @@
 ﻿/*
 CodeBit Metadata
 
-&name=Bredd/CommandLineLexer.cs
+&name=Bredd.tech/CommandLineLexer.cs
 &description="CodeBit class for lexing (parsing) command lines."
 &author="Brandt Redd"
 &url=https://raw.githubusercontent.com/bredd/CommandLineLexer/main/CommandLineLexer.cs
@@ -11,7 +11,8 @@ CodeBit Metadata
 &datePublished=2022-09-21
 &license=https://opensource.org/licenses/BSD-3-Clause
 
-About Codebits http://www.filemeta.org/CodeBit
+About Codebits: http://www.filemeta.org/CodeBit
+/ph red?
 */
 
 /*
