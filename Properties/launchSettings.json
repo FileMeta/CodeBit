@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "CodeBit": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate CommandLineLexer.cs",
+      "workingDirectory": ".\\CodeBits"
+    }
+  }
+}
