@@ -44,10 +44,11 @@ namespace FileMeta
         /// <param name="key">Name of the property to return.</param>
         /// <returns>The value of the property or null if it doesnt exist. If multiple values
         /// were set for the property returns the first one.</returns>
-        public string GetValue(string key)
+        public string? GetValue(string key)
         {
-            var list = InternalGetValues(key, false);
-            return (list == null || list.Count == 0) ? null : list[0];
+            List<string>? list;
+            if (TryGetValue(key, out list) && list.Count > 0) return list[0];
+            return null;
         }
 
         /// <summary>
@@ -65,9 +66,33 @@ namespace FileMeta
         /// for a property.
         /// </para>
         /// </remarks>
-        public IList<string> GetValues(string key, bool createIfNotPresent = false)
+        public IList<string>? GetValues(string key)
         {
-            return InternalGetValues(key, createIfNotPresent);
+            List<string>? list;
+            if (TryGetValue(key, out list)) return list;
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a list of all values for a property.
+        /// </summary>
+        /// <param name="key">Name of the property to return.</param>
+        /// <returns>A list of values.</returns>
+        /// <remarks>
+        /// <para>If the property is not present then the property will be created with an
+        /// empty list for the value. In that case, the caller SHOULD immediately add a value
+        /// to the property since an empty list is not a proper state. Nevertheless that state
+        /// is tolerated by the class so long as the calling application also tolerates the
+        /// state of having an empty list of values for a property.
+        /// </para>
+        /// </remarks>
+        public IList<string> GetValuesAlways(string key)
+        {
+            List<string>? list;
+            if (TryGetValue(key, out list)) return list;
+            list = new List<string>();
+            Add(key, list);
+            return list;
         }
 
         /// <summary>
@@ -86,7 +111,7 @@ namespace FileMeta
                 Remove(key);
                 return;
             }
-            var list = InternalGetValues(key, true);
+            var list = GetValuesAlways(key);
             list.Clear();
             list.Add(value);
         }
@@ -115,7 +140,7 @@ namespace FileMeta
             {
                 if (value == null) throw new ArgumentNullException("Values may not contain null.");
             }
-            var list = InternalGetValues(key, true);
+            var list = (List<string>)GetValuesAlways(key);
             list.Clear();
             list.AddRange(values);
             if (list.Count == 0)
@@ -140,7 +165,7 @@ namespace FileMeta
         public int AddValue(string key, string value)
         {
             if (value == null) throw new ArgumentNullException("Value cannot be null. Use Remove(string) to remove a value.");
-            var list = InternalGetValues(key, true);
+            var list = GetValuesAlways(key);
             list.Add(value);
             return list.Count;
         }
@@ -164,7 +189,7 @@ namespace FileMeta
             {
                 if (value == null) throw new ArgumentNullException("Values may not contain null.");
             }
-            var list = InternalGetValues(key, true);
+            var list = (List<string>)GetValuesAlways(key);
             list.AddRange(values);
             return list.Count;
         }
@@ -205,16 +230,6 @@ namespace FileMeta
                 ? value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
                 : value.ToString("yyyy-MM-ddTHH:mm:ss.FFFzzz", CultureInfo.InvariantCulture);
             SetValue(key, strValue);
-        }
-
-        private List<string> InternalGetValues(string key, bool addIfNotPresent)
-        {
-            List<string> list;
-            if (TryGetValue(key, out list)) return list;
-            if (!addIfNotPresent) return null;
-            list = new List<string>();
-            Add(key, list);
-            return list;
         }
     }
 }

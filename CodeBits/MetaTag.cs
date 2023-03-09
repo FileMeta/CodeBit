@@ -125,8 +125,8 @@ namespace FileMeta
             var match = s_rxSingleMetatag.Match(s);
             if (!match.Success)
             {
-                key = null;
-                value = null;
+                key = string.Empty;
+                value = string.Empty;
                 return false;
             }
 
@@ -285,7 +285,7 @@ namespace FileMeta
 
             var tagsEntered = new HashSet<string>();
 
-            IDictionary<string, string> tagSet = metaTagSet as IDictionary<string, string>;
+            IDictionary<string, string>? tagSet = metaTagSet as IDictionary<string, string>;
             if (tagSet == null)
             {
                 tagSet = new Dictionary<string, string>();
@@ -308,7 +308,7 @@ namespace FileMeta
                 // Process the match.
                 string key = match.Groups[1].Value;
                 string value = DecodeValue(match.Groups[2].Value);
-                string newValue;
+                string? newValue;
                 bool inSet = tagSet.TryGetValue(key, out newValue);
 
                 // If a tag with the same value has already been processed,
@@ -331,7 +331,7 @@ namespace FileMeta
                 // Else, if there's a new value for this metatag. Substitute the new one in-place.
                 else if (inSet && !string.Equals(value, newValue, StringComparison.Ordinal))
                 {
-                    sb.Append(Format(key, newValue));
+                    sb.Append(Format(key, newValue ?? string.Empty));
                     p = match.Index + match.Length;
                 }
 
@@ -413,7 +413,7 @@ namespace FileMeta
             {
                 get
                 {
-                    Match match = m_enumerator.Current as Match;
+                    Match? match = m_enumerator.Current as Match;
                     if (match == null) throw new InvalidOperationException();
                     Debug.Assert(match.Success);
 
@@ -425,8 +425,6 @@ namespace FileMeta
 
             public void Dispose()
             {
-                m_enumerator = null;
-                m_matches = null;
             }
 
             public bool MoveNext()

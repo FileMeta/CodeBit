@@ -64,22 +64,22 @@ namespace CodeBit
         /// <summary>
         /// Name of the CodeBit (optional, may be Null)
         /// </summary>
-        public string Name { get => GetValue(key_name); set => SetValue(key_name, value); }
+        public string Name { get => GetValue(key_name) ?? string.Empty; set => SetValue(key_name, value); }
 
         /// <summary>
         /// Version of the CodeBit (required)
         /// </summary>
-        public string Version { get => GetValue(key_version); set => SetValue(key_version, value); }
+        public string Version { get => GetValue(key_version) ?? string.Empty; set => SetValue(key_version, value); }
 
         /// <summary>
         /// URL of the CodeBit (required)
         /// </summary>
-        public string Url { get => GetValue(key_url); set => SetValue(key_url, value); }
+        public string Url { get => GetValue(key_url) ?? string.Empty; set => SetValue(key_url, value); }
 
         /// <summary>
         /// Keywords of the CodeBit (must include "CodeBit")
         /// </summary>
-        public IList<string> Keywords => GetValues(key_keywords, true);
+        public IList<string> Keywords => GetValuesAlways(key_keywords);
 
         /// <summary>
         /// Date the CodeBit was published
@@ -95,27 +95,27 @@ namespace CodeBit
         /// <remarks>Optional. Value will be <see cref="DateTimeOffset.MinValue"/> if
         /// the property is absent or if the string form is invalid.
         /// </remarks>
-        public string DatePublishedStr { get => GetValue(key_datePublished); set => SetValue(key_datePublished, value); }
+        public string DatePublishedStr { get => GetValue(key_datePublished) ?? string.Empty; set => SetValue(key_datePublished, value); }
 
         /// <summary>
         /// Author of the CodeBit (optional, may be null)
         /// </summary>
-        public string Author { get => GetValue(key_author); set => SetValue(key_author, value); }
+        public string Author { get => GetValue(key_author) ?? string.Empty; set => SetValue(key_author, value); }
 
         /// <summary>
         /// Description of the CodeBut (optional, may be null)
         /// </summary>
-        public string Description { get => GetValue(key_description); set => SetValue(key_description, value); }
+        public string Description { get => GetValue(key_description) ?? string.Empty; set => SetValue(key_description, value); }
 
         /// <summary>
         /// License URL of the CodeBit (optional, may be null)
         /// </summary>
-        public string License { get => GetValue(key_license); set => SetValue(key_license, value); }
+        public string License { get => GetValue(key_license) ?? string.Empty; set => SetValue(key_license, value); }
 
         /// <summary>
         /// Filename from which the metadata was read. Used only for validation.
         /// </summary>
-        public string FilenameForValidation { get; set; }
+        public string? FilenameForValidation { get; set; }
 
         public override string ToString()
         {
@@ -186,7 +186,7 @@ namespace CodeBit
 
             if (ValidateRequiredSingle(key_url, ref validationLevel, validationDetail))
             {
-                if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri uri))
+                if (!Uri.TryCreate(Url, UriKind.Absolute, out _))
                 {
                     validationLevel |= ValidationLevel.FailMandatory;
                     validationDetail.AppendLine("'url' property is not a valid URL.");

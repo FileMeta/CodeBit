@@ -5,14 +5,14 @@ CodeBit Metadata
 &description="CodeBit class for lexing (parsing) command lines."
 &author="Brandt Redd"
 &url=https://raw.githubusercontent.com/bredd/CommandLineLexer/main/CommandLineLexer.cs
-&version=2.0.0
+&version=3.0.0
 &successorOf=https://raw.githubusercontent.com/bredd/CommandLineLexer/54ca47c0eca9572072bc1492da2d0eb447afb504/CommandLineLexer.cs
 &keywords=CodeBit
 &datePublished=2022-09-21
 &license=https://opensource.org/licenses/BSD-3-Clause
+&comment="Version 3.x and beyond are for C# 8 (.NET 6) and further. For earlier versions of C# use version 2.x."
 
 About Codebits: http://www.filemeta.org/CodeBit
-/ph red?
 */
 
 /*
@@ -79,8 +79,8 @@ namespace Bredd
         string m_args;
         int m_start;
         int m_pos;
-        string m_currentArg;
-        string m_latestOption;
+        string? m_currentArg;
+        string m_latestOption = string.Empty;
         bool m_isQuoted;
         bool m_isOption;
 
@@ -263,7 +263,7 @@ namespace Bredd
         /// Moves to the next argument and returns it.
         /// </summary>
         /// <returns>The next argument or null if at the end of the argument list.</returns>
-        public string ReadNextArg()
+        public string? ReadNextArg()
         {
             if (!MoveNext()) return null;
             return m_currentArg;
@@ -284,7 +284,7 @@ namespace Bredd
         /// </remarks>
         /// <returns>The next option in the argument list or null if no arguments remain.</returns>
         /// <exception cref="CommandLineException">Thrown if the next argument is not an option.</exception>
-        public string ReadNextOption()
+        public string? ReadNextOption()
         {
             if (!MoveNext()) return null;
             if (!IsOption)
@@ -306,7 +306,7 @@ namespace Bredd
         public string ReadNextValue()
         {
             string latestOption = m_latestOption; // Save this first because if the next value is an option it will be overwritten
-            if (!MoveNext())
+            if (!MoveNext() || m_currentArg == null)
                 throw new CommandLineException(GetOptionErrPrefix(latestOption) + "Expected value but reached end of argument list.");
             if (IsOption)
                 throw new CommandLineException($"{GetOptionErrPrefix(latestOption)}Expected value but found option \"{m_currentArg}\".");

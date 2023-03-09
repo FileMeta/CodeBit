@@ -1,14 +1,16 @@
 ﻿/*
----
-name: AssemblyMetadata.cs
-description: Convenient and efficient retrieval of assembly metadata.
-url: https://raw.githubusercontent.com/FileMeta/AssemblyMetadata/main/AssemblyMetadata.cs
-version: 1.0
-keywords: CodeBit
-dateModified: 2021-10-26
-license: https://opensource.org/licenses/BSD-3-Clause
-# Metadata in Yaml format. See http://filemeta.org/CodeBit.html
-...
+CodeBit Metadata
+
+&name=FileMeta.org/AssemblyMetadata.cs
+&description="Convenient and efficient retrieval of assembly metadata."
+&author="Brandt Redd"
+&url=https://raw.githubusercontent.com/FileMeta/AssemblyMetadata/main/AssemblyMetadata.cs
+&version=2.0.0
+&keywords=CodeBit
+&datePublished=2023-03-09
+&license=https://opensource.org/licenses/BSD-3-Clause
+
+About Codebits: http://www.filemeta.org/CodeBit
 */
 
 /*
@@ -82,17 +84,17 @@ namespace FileMeta
             }
         }
 
-        public string FullName => m_assembly.FullName;
-        public string Name => m_assembly.GetName().Name;
-        public string Title => m_assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title;
-        public string Description => m_assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description;
-        public string Configuration => m_assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
-        public string Company => m_assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company;
-        public string ProductName => m_assembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product;
-        public string Copyright => m_assembly.GetCustomAttribute <AssemblyCopyrightAttribute>()?.Copyright;
-        public string Trademark => m_assembly.GetCustomAttribute <AssemblyTrademarkAttribute>()?.Trademark;
-        public Version Version => m_assembly.GetName().Version;
-        public string FileVersion => m_assembly.GetCustomAttribute <AssemblyFileVersionAttribute>()?.Version;
+        public string FullName => m_assembly.FullName ?? String.Empty;
+        public string Name => m_assembly.GetName()?.Name ?? String.Empty;
+        public string Title => m_assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? String.Empty;
+        public string Description => m_assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description ?? String.Empty;
+        public string Configuration => m_assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration ?? String.Empty;
+        public string Company => m_assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? String.Empty;
+        public string ProductName => m_assembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? String.Empty;
+        public string Copyright => m_assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? String.Empty;
+        public string Trademark => m_assembly.GetCustomAttribute<AssemblyTrademarkAttribute>()?.Trademark ?? String.Empty;
+        public Version Version => m_assembly.GetName().Version ?? new Version();
+        public string FileVersion => m_assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? String.Empty;
 
         /// <summary>
         /// Returns a multiline summary suitable for reporting the version information for an application.

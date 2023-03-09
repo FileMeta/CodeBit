@@ -13,8 +13,8 @@ namespace CodeBit
   CodeBit GetVersion
 ";
 
-        static Action s_operation;
-        static string s_target;
+        static Action? s_operation;
+        static string s_target = string.Empty;
 
         static void Main(string[] args)
         {
@@ -28,14 +28,6 @@ namespace CodeBit
             {
                 Console.WriteLine(err.Message);
             }
-
-#if DEBUG
-            if (Debugger.IsAttached)
-            {
-                Console.Write("\nPress any key to exit.");
-                Console.ReadKey();
-            }
-#endif
         }
 
         static void ParseCommandLine()
