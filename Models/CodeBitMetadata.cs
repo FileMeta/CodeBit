@@ -7,6 +7,7 @@ using System.IO;
 using FileMeta;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Reflection.Metadata.Ecma335;
 
 namespace CodeBit
 {
@@ -69,7 +70,23 @@ namespace CodeBit
         /// <summary>
         /// Version of the CodeBit (required)
         /// </summary>
-        public string Version { get => GetValue(key_version) ?? string.Empty; set => SetValue(key_version, value); }
+        /// <remarks>
+        /// Returns a copy of the version. Changing it will not change the internal value. To make a change,
+        /// update the version and set the property to the updated version.
+        /// </remarks>
+        public SemVer Version
+        {
+            get
+            {
+                var strValue = GetValue(key_version);
+                if (strValue != null && SemVer.TryParse(strValue, out SemVer value)) return value;
+                return SemVer.Zero;
+            }
+            set
+            {
+                SetValue(key_version, value.ToString());
+            }
+        }
 
         /// <summary>
         /// URL of the CodeBit (required)
@@ -121,7 +138,7 @@ namespace CodeBit
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(Name)) sb.AppendLine("name: " + Name);
-            if (!string.IsNullOrEmpty(Version)) sb.AppendLine("version: " + Version);
+            sb.AppendLine("version: " + Version.ToString());
             if (!string.IsNullOrEmpty(Url)) sb.AppendLine("url: " + Url);
             if (!string.IsNullOrEmpty(DatePublishedStr)) sb.AppendLine("datePublished: " + DatePublishedStr);
             if (!string.IsNullOrEmpty(Author)) sb.AppendLine("author: " + Author);
@@ -152,11 +169,6 @@ namespace CodeBit
         // a filename path (zero or more directory names concluding with a filename).
         static Regex s_rxName = new Regex("^(?:" + c_rxDomainName + ")(?:/" + c_rxFilename + ")*/(" + c_rxFilename + ")$");
 
-        // (?:(?:[A-Za-z0-9-_]+)(?:\.[A-Za-z0-9-_]+)+)/(?:[^/\\><\|:&""*? \r\n]{1,128})*/([^/\\><\|:&""*? \r\n]{1,128})
-
-        // Regular expression to detect and parse semantic versioning
-        static Regex s_rxSemVer = new Regex(@"^(?<major>0|[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>0|[1-9]\d*)(?:-(?<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$", RegexOptions.CultureInvariant);
-
         public (ValidationLevel validationLevel, string validationDetail) Validate()
         {
             var validationLevel = ValidationLevel.Pass;
@@ -176,11 +188,14 @@ namespace CodeBit
 
             if (ValidateRequiredSingle(key_version, ref validationLevel, validationDetail))
             {
-                var match = s_rxSemVer.Match(Version);
-                if (!match.Success)
+                (int successLevel, SemVer value, string parseMessages) = SemVer.TryParse(GetValue(key_version) ?? string.Empty);
+                if (successLevel <= SemVer.Tolerable)
                 {
-                    validationLevel |= ValidationLevel.FailMandatory;
-                    validationDetail.AppendLine("'version' property does not match Semantic Versioning pattern.");
+                    validationLevel |= (successLevel == SemVer.Tolerable) ? ValidationLevel.FailRecommended : ValidationLevel.FailMandatory;
+                    foreach (var msg in parseMessages.Split('\n', StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        validationDetail.AppendLine("'version' property: " + msg);
+                    }
                 }
             }
 

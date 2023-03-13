@@ -14,7 +14,7 @@ namespace CodeBit
 ";
 
         static Action? s_operation;
-        static string s_target = string.Empty;
+        static string? s_target;
 
         static void Main(string[] args)
         {
@@ -73,6 +73,10 @@ namespace CodeBit
             if (getTarget)
             {
                 s_target = cl.ReadNextArg();
+                if (s_target == null)
+                {
+                    cl.ThrowValueError("Expected target for operation.");
+                }
             }
 
             while (cl.MoveNext())
@@ -89,7 +93,7 @@ namespace CodeBit
 
         static void Validate()
         {
-            CodeBitValidator.ValidateFile(s_target);
+            CodeBitValidator.ValidateFile(s_target ?? string.Empty);
         }
 
         static void GetSyntax()

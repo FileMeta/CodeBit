@@ -359,7 +359,7 @@ namespace Bredd
         /// <remarks>The error message is prefixed with "Command Line Error on Option" with the
         /// option name if CurrentOption has a value. Otherwise prefixed with "Command Line Error"
         /// </remarks>
-        /*[DoesNotReturn] Requires .Net 5.0_ or .Net Core 3.0+ */
+        [DoesNotReturn]
         public void ThrowValueError(string message)
         {
             throw new CommandLineException(GetOptionErrPrefix(m_latestOption) + message);
@@ -368,7 +368,7 @@ namespace Bredd
         /// <summary>
         /// Throws an error indicating that the current argument was unexpected.
         /// </summary>
-        /*[DoesNotReturn]  Requires .Net 5.0_ or .Net Core 3.0+ */
+        [DoesNotReturn]
         public void ThrowUnexpectedArgError()
         {
             throw new CommandLineException("Command Line Error: Unexpected argument: " + m_currentArg);
@@ -377,7 +377,7 @@ namespace Bredd
         /// <summary>
         /// Throws an error indicating that the current argument was unexpected.
         /// </summary>
-        /*[DoesNotReturn]  Requires .Net 5.0_ or .Net Core 3.0+ */
+        [DoesNotReturn]
         public void ThrowUnknownOptionError()
         {
             throw new CommandLineException("Command Line Error: Unknown option: " + m_currentArg);

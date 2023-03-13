@@ -89,7 +89,7 @@ namespace CodeBit
                 return;
             }
 
-            int cmp = CompareSemVer(metadata.Version, pubMetadata.Version);
+            int cmp = metadata.Version.CompareTo(pubMetadata.Version);
             if (cmp < 0)
             {
                 Console.WriteLine($"Local version ({metadata.Version}) is older than the published version ({pubMetadata.Version}). Consider updating.");
@@ -102,49 +102,6 @@ namespace CodeBit
             }
 
         }
-
-        static int CompareSemVer(string a, string b)
-        {
-            string[] aParts = (a != null) ? a.Split('.') : new string[0];
-            string[] bParts = (b != null) ? b.Split('.') : new string[0];
-
-            int min = Math.Min(aParts.Length, bParts.Length);
-            for (int i = 0; i < min; ++i)
-            {
-                int cmp;
-                if (int.TryParse(aParts[i], out int aInt) && int.TryParse(bParts[i], out int bInt))
-                {
-                    cmp = aInt - bInt;
-                }
-                else
-                {
-                    cmp = string.CompareOrdinal(aParts[i], bParts[i]);
-                }
-                if (cmp != 0) return cmp;
-            }
-            return aParts.Length - bParts.Length;
-        }
-
-#if TESTSEMVER
-
-        static void TestCompareSemVer(string a, string b, int expected)
-        {
-            int result = CompareSemVer(a, b);
-            bool match = (expected > 0 == result > 0) && (expected < 0 == result < 0);
-            Console.WriteLine($"{a} {(result < 0 ? "<" : result > 0 ? ">" : "==")} {b} ({(match ? "correct" : "incorrect")})");
-        }
-
-        public static void UnitTestCompareSemVer()
-        {
-            TestCompareSemVer("1", "1.1", -1);
-            TestCompareSemVer("2", "1.1", 1);
-            TestCompareSemVer("1.2.3.4", "1.2.3.4", 0);
-            TestCompareSemVer("1.2.2.10", "1.2.2.3", 1);
-            TestCompareSemVer("1.2.3.four", "1.2.3.4", 1);
-            TestCompareSemVer("1.3.2", "1.12.4", -1);
-        }
-
-#endif // TESTSEMVER
 
         /*
         static (bool match, string detail) CompareMetadata(CodeBitMetadata a, CodeBitMetadata b)
