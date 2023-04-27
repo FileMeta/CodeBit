@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Bredd;
 
 namespace CodeBit
 {
@@ -101,6 +102,32 @@ namespace CodeBit
                 return;
             }
 
+        }
+
+        public static void ValidateDirectory(string domainName)
+        {
+            string dirRecord = null;
+            var txtRecords = WinDnsQuery.GetTxtRecords("_dir." + domainName);
+            if (txtRecords != null)
+            {
+                foreach(var txtRecord in txtRecords)
+                {
+                    if (txtRecord.StartsWith("dir="))
+                    {
+                        dirRecord = txtRecord;
+                        break;
+                    }
+                }
+            }
+            if (dirRecord == null)
+            {
+                Console.WriteLine($"No dir TXT record found on domain '{domainName}'.");
+                Console.WriteLine($"DNS must include a TXT record on the domain '_dir.{domainName}' that contains\nthe URL, 'dir=<url of the directory>'.");
+                return;
+            }
+
+            var dirUrl = dirRecord.Substring(4).Trim();
+            Console.WriteLine($"DNS Success: Directory for '{domainName}' is located at '{dirUrl}'.");
         }
 
         /*

@@ -2,7 +2,7 @@
   "profiles": {
     "CodeBit": {
       "commandName": "Project",
-      "commandLineArgs": "Validate CommandLineLexer.cs",
+      "commandLineArgs": "ValidateDirectory bad.bredd.tech",
       "workingDirectory": ".\\CodeBits"
     }
   }

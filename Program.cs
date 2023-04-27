@@ -10,7 +10,17 @@ namespace CodeBit
     {
         const string c_syntax =
 @"Syntax:
-  CodeBit GetVersion
+  CodeBit <Action> [arguments...]
+
+Actions:
+  Validate <filename>
+    Validate the codebit metadata in the designated file.
+
+  ValidateDirectory <domainName>
+    Validate the published directory for a particular domain name.
+
+  GetVersion
+    Report the version of this codebit tool.
 ";
 
         static Action? s_operation;
@@ -40,6 +50,11 @@ namespace CodeBit
             {
                 case "validate":
                     s_operation = Validate;
+                    getTarget = true;
+                    break;
+
+                case "validatedirectory":
+                    s_operation = ValidateDirectory;
                     getTarget = true;
                     break;
 
@@ -94,6 +109,11 @@ namespace CodeBit
         static void Validate()
         {
             CodeBitValidator.ValidateFile(s_target ?? string.Empty);
+        }
+
+        static void ValidateDirectory()
+        {
+            CodeBitValidator.ValidateDirectory(s_target ?? string.Empty);
         }
 
         static void GetSyntax()
