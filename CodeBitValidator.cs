@@ -128,6 +128,22 @@ namespace CodeBit
 
             var dirUrl = dirRecord.Substring(4).Trim();
             Console.WriteLine($"DNS Success: Directory for '{domainName}' is located at '{dirUrl}'.");
+
+            Stream stream;
+            try
+            {
+                stream = Http.Get(dirUrl);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine("Failed to read directory: " + err.Message);
+                return;
+            }
+
+            using (var reader = new StreamReader(stream, Encoding.UTF8, true))
+            {
+                Console.WriteLine(reader.ReadToEnd());
+            }
         }
 
         /*
