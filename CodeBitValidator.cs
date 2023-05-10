@@ -1,9 +1,8 @@
-﻿using System;
+﻿//#define RAW
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using Bredd;
 
 namespace CodeBit
@@ -106,11 +105,11 @@ namespace CodeBit
 
         public static void ValidateDirectory(string domainName)
         {
-            string dirRecord = null;
+            string? dirRecord = null;
             var txtRecords = WinDnsQuery.GetTxtRecords("_dir." + domainName);
             if (txtRecords != null)
             {
-                foreach(var txtRecord in txtRecords)
+                foreach (var txtRecord in txtRecords)
                 {
                     if (txtRecord.StartsWith("dir="))
                     {
@@ -139,10 +138,27 @@ namespace CodeBit
                 Console.WriteLine("Failed to read directory: " + err.Message);
                 return;
             }
-
-            using (var reader = new StreamReader(stream, Encoding.UTF8, true))
+            using (var reader = JsonXmlReader.Create(stream))
             {
-                Console.WriteLine(reader.ReadToEnd());
+                while (reader.Read())
+                {
+                    switch (reader.NodeType)
+                    {
+                        case JsonNodeType.StartObject:
+                        case JsonNodeType.StartArray:
+                            Console.WriteLine($"{reader.Name}: {reader.NodeType}");
+                            break;
+                        case JsonNodeType.Value:
+                            {
+                                Console.WriteLine($"{reader.Name}: {reader.Value}");
+                            }
+                            break;
+                        default:
+                            Console.WriteLine(reader.NodeType);
+                            break;
+                    }
+                }
+
             }
         }
 
