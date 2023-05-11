@@ -40,17 +40,32 @@ namespace CodeBit
 
         public bool Read()
         {
+            m_xmlReader.Read();
+            return ToJsonNode();
+        }
+
+        public bool Skip()
+        {
+            if (m_nodeType != JsonNodeType.StartObject && m_nodeType != JsonNodeType.StartArray)
+                throw new InvalidOperationException("JsonXmlReader.Skip() must be called at a StartObject or StartArray");
+            m_xmlReader.Skip();
+            return ToJsonNode();
+        }
+
+        private bool ToJsonNode()
+        {
             // Advance to the next node
             m_nodeType = JsonNodeType.End;
             m_name = string.Empty;
             m_value = string.Empty;
             XmlNodeType xmlNodeType;
-            do
+            for(; ; )
             {
-                if (!m_xmlReader.Read()) return false;
                 xmlNodeType = m_xmlReader.NodeType;
-            } while (xmlNodeType != XmlNodeType.Element
-                && xmlNodeType != XmlNodeType.EndElement);
+                if (xmlNodeType == XmlNodeType.Element || xmlNodeType == XmlNodeType.EndElement)
+                    break;
+                if (!m_xmlReader.Read()) return false;
+            }
 
             // Return if end element
             if (xmlNodeType == XmlNodeType.EndElement)

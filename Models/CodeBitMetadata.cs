@@ -49,6 +49,8 @@ namespace CodeBit
         const string key_author = "author";
         const string key_description = "description";
         const string key_license = "license";
+        const string key_atType = "@type";
+        const string key_underType = "_type";
 
         static IReadOnlyCollection<string> s_standardKeys = new HashSet<string>
         {
@@ -61,6 +63,19 @@ namespace CodeBit
             key_description,
             key_license
         };
+
+        /// <summary>
+        /// LinkedData type. For a CodeBit it should be "SoftwareSourceCode"
+        /// </summary>
+        /// <remarks>
+        /// The name, "AtType", comes from JSON linked data where the corresponding property is "@type".
+        /// In MetaTag format the property is ("_type").
+        /// </remarks>
+        public string AtType
+        {
+            get { return GetValue(key_atType) ?? GetValue(key_underType) ?? string.Empty; }
+            set { SetValue(key_atType, value); SetValue(key_underType, null); }
+        }
 
         /// <summary>
         /// Name of the CodeBit (optional, may be Null)

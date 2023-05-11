@@ -138,25 +138,16 @@ namespace CodeBit
                 Console.WriteLine("Failed to read directory: " + err.Message);
                 return;
             }
-            using (var reader = JsonXmlReader.Create(stream))
+            using (var reader = new DirectoryReader(stream))
             {
-                while (reader.Read())
+                var dirMetadata = reader.ReadDirectory();
+
+                for (; ; )
                 {
-                    switch (reader.NodeType)
-                    {
-                        case JsonNodeType.StartObject:
-                        case JsonNodeType.StartArray:
-                            Console.WriteLine($"{reader.Name}: {reader.NodeType}");
-                            break;
-                        case JsonNodeType.Value:
-                            {
-                                Console.WriteLine($"{reader.Name}: {reader.Value}");
-                            }
-                            break;
-                        default:
-                            Console.WriteLine(reader.NodeType);
-                            break;
-                    }
+                    var codebitMetadata = reader.ReadCodeBit();
+                    if (codebitMetadata == null) break;
+
+                    Console.WriteLine($"Codebit: type={codebitMetadata.AtType} keywords={string.Join(", ", codebitMetadata.Keywords)}");
                 }
 
             }
