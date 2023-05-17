@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using Bredd;
 
@@ -176,19 +177,18 @@ namespace CodeBit
 
                         if (validationLevel == ValidationLevel.Pass)
                         {
-                            Console.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry passes validation.");
+                            Console.Out.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry passes validation.");
                         }
                         else if (validationLevel == ValidationLevel.FailRecommended)
                         {
-                            Console.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry fails one or more recommended but optional requirements:");
-                            Console.WriteLine(validationDetail);
+                            Console.Out.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry fails one or more recommended but optional requirements:");
+                            Console.Out.WriteLineIndented(3, validationDetail);
                         }
                         else
                         {
-                            Console.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry fails one or more mandatory requirements:");
-                            Console.WriteLine(validationDetail);
+                            Console.Out.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry fails one or more mandatory requirements:");
+                            Console.Out.WriteLineIndented(3, validationDetail);
                         }
-                        Console.WriteLine();
                     }
                     else if (codebitMetadata.IsSoftwareSourceCode)
                     {
@@ -213,6 +213,30 @@ namespace CodeBit
             if (!string.Equals(a.Version, b.Version))
         }
         */
+    }
+
+    static class IndentedWrite
+    {
+        public static void WriteLineIndented(this TextWriter writer, int indentation, String str)
+        {
+            var indent = new String(' ', indentation);
+            var s = str.AsSpan();
+            var len = s.Length;
+            for (int i = 0; i < s.Length;)
+            {
+                writer.Write(indent);
+
+                // Slice and write one line
+                int a = i;
+                while (i < len && s[i] != '\n') ++i;
+                var e = i;
+                while (e > a && s[e - 1] == '\r') --e;
+                ++i;
+                while (i < len && s[i] == '\r') ++i;
+                writer.Write(s[a..e]);
+                writer.WriteLine();
+            }
+        }
     }
 }
  

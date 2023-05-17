@@ -1,8 +1,22 @@
 {
   "profiles": {
-    "CodeBit": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Sample Directory": {
       "commandName": "Project",
-      "commandLineArgs": "ValidateDirectory bredd.tech",
+      "commandLineArgs": "ValidateDirectory sample.FileMeta.org",
+      "workingDirectory": ".\\CodeBits"
+    },
+    "Validate VideoFeedback.html": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate VideoFeedback.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "Bad Directory": {
+      "commandName": "Project",
+      "commandLineArgs": "ValidateDirectory bad.FileMeta.org",
       "workingDirectory": ".\\CodeBits"
     }
   }
