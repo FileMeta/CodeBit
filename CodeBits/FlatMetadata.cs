@@ -100,17 +100,8 @@ namespace FileMeta
         /// </summary>
         /// <param name="key">Name of the property to set.</param>
         /// <param name="value">Value to be set.</param>
-        /// <remarks>
-        /// <para>If value is null, the property is removed.
-        /// </para>
-        /// </remarks>
         public void SetValue(string key, string value)
         {
-            if (value == null)
-            {
-                Remove(key);
-                return;
-            }
             var list = GetValuesAlways(key);
             list.Clear();
             list.Add(value);

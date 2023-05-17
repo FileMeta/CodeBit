@@ -40,7 +40,6 @@ namespace CodeBit
     /// </summary>
     internal class CodeBitMetadata : FlatMetadata
     {
-        const string keyword_codebit = "CodeBit";
         const string key_name = "name";
         const string key_version = "version";
         const string key_url = "url";
@@ -51,6 +50,8 @@ namespace CodeBit
         const string key_license = "license";
         const string key_atType = "@type";
         const string key_underType = "_type";
+        const string val_keyword_codebit = "CodeBit";
+        const string val_atType_software = "SoftwareSourceCode";
 
         static IReadOnlyCollection<string> s_standardKeys = new HashSet<string>
         {
@@ -74,7 +75,7 @@ namespace CodeBit
         public string AtType
         {
             get { return GetValue(key_atType) ?? GetValue(key_underType) ?? string.Empty; }
-            set { SetValue(key_atType, value); SetValue(key_underType, null); }
+            set { SetValue(key_atType, value); Remove(key_underType); }
         }
 
         /// <summary>
@@ -149,6 +150,23 @@ namespace CodeBit
         /// </summary>
         public string? FilenameForValidation { get; set; }
 
+        public bool IsCodeBit
+        {
+            get
+            {
+                return IsSoftwareSourceCode
+                    && Keywords.Contains(val_keyword_codebit);
+            }
+        }
+
+        public bool IsSoftwareSourceCode
+        {
+            get
+            {
+                return (AtType == val_atType_software);
+            }
+        }
+
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -190,6 +208,16 @@ namespace CodeBit
             var validationDetail = new StringBuilder();
 
             // === Required Properties ===
+            if (AtType != val_atType_software)
+            {
+                validationLevel |= ValidationLevel.FailRecommended;
+                validationDetail.AppendLine($"Property '_type' (or '@type' in a directory) should be '{val_atType_software}' but is '{AtType}'.");
+            }
+            if ((GetValues(key_atType)?.Count ?? 0) > 1)
+            {
+                validationLevel |= ValidationLevel.FailRecommended;
+                validationDetail.AppendLine($"Property '_type' (or '@type' in a directory) has multiple values. Should have one value of '{val_atType_software}'.");
+            }
 
             if (ValidateRequiredSingle(key_name, ref validationLevel, validationDetail))
             {
@@ -223,10 +251,10 @@ namespace CodeBit
                 }
             }
 
-            if (!Keywords.Contains(keyword_codebit))
+            if (!Keywords.Contains(val_keyword_codebit))
             {
                 validationLevel |= ValidationLevel.FailMandatory;
-                validationDetail.AppendLine($"Property '{key_keywords}' must include '{keyword_codebit}'.");
+                validationDetail.AppendLine($"Property '{key_keywords}' must include '{val_keyword_codebit}'.");
             }
 
             // === Optional Properties ===
