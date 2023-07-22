@@ -21,7 +21,8 @@ namespace CodeBit
 
             try
             {
-                metadata = CodebitReader.ReadFromFile(path);
+                metadata = MetadataLoader.ReadCodeBitFromFile(path);
+                metadata.FilenameForValidation = filename;
                 (validationLevel, validationDetail) = metadata.Validate();
 
                 if (validationLevel == ValidationLevel.Pass)
@@ -31,12 +32,12 @@ namespace CodeBit
                 else if (validationLevel == ValidationLevel.FailRecommended)
                 {
                     Console.WriteLine("Warning: CodeBit fails one or more recommended but optional requirements:");
-                    Console.WriteLine(validationDetail);
+                    Console.Out.WriteLineIndented(3, validationDetail);
                 }
                 else
                 {
                     Console.WriteLine("CodeBit fails one or more mandatory requirements:");
-                    Console.WriteLine(validationDetail);
+                    Console.Out.WriteLineIndented(3, validationDetail);
                 }
 
                 Console.WriteLine();
@@ -58,7 +59,7 @@ namespace CodeBit
 
             try
             {
-                pubMetadata = CodebitReader.ReadFromUrl(metadata.Url);
+                pubMetadata = MetadataLoader.ReadCodeBitFromUrl(metadata.Url);
                 (pubValidationLevel, pubValidationDetail) = pubMetadata.Validate();
 
                 if (pubValidationLevel == ValidationLevel.Pass)
@@ -68,12 +69,12 @@ namespace CodeBit
                 else if (pubValidationLevel == ValidationLevel.FailRecommended)
                 {
                     Console.WriteLine("Warning: Published CodeBit fails one or more recommended but optional requirements:");
-                    Console.Write(pubValidationDetail);
+                    Console.Out.WriteLineIndented(3, pubValidationDetail);
                 }
                 else
                 {
                     Console.WriteLine("Published CodeBit fails one or more mandatory requirements:");
-                    Console.Write(pubValidationDetail);
+                    Console.Out.WriteLineIndented(3, pubValidationDetail);
                 }
                 Console.WriteLine();
 
@@ -97,13 +98,14 @@ namespace CodeBit
                 else if (cmpValidationLevel == ValidationLevel.FailRecommended)
                 {
                     Console.WriteLine("Warning: Local and published codebits fail one or more recommended but optional comparisons:");
-                    Console.Write(cmpValidationDetail);
+                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
                 }
                 else
                 {
                     Console.WriteLine("Error: Local and published codebits fail one or more required comparisons:");
-                    Console.Write(cmpValidationDetail);
+                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
                 }
+                Console.WriteLine();
             }
             catch (Exception err)
             {
@@ -111,6 +113,53 @@ namespace CodeBit
                 return;
             }
 
+            Console.WriteLine("Comparing with directory...");
+            try
+            {
+                string domainName = MetadataLoader.GetCodebitDomainName(metadata.Name);
+                var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
+                if (dirUrl is null)
+                {
+                    Console.WriteLine($"No DNS directory entry for domain '{domainName}'.");
+                    return;
+                }
+                var reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
+
+                CodeBitMetadata? dirMetadata;
+                for (; ; )
+                {
+                    dirMetadata = reader.ReadCodeBit();
+                    if (dirMetadata is null)
+                    {
+                        Console.WriteLine($"Codebit '{metadata.Name}' is not listed in the directory.");
+                        return;
+                    }
+                    if (string.Equals(dirMetadata.Name, metadata.Name, StringComparison.Ordinal)) break;
+                }
+
+                (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = metadata.CompareTo(dirMetadata, "Local", "Directory");
+
+                if (cmpValidationLevel == ValidationLevel.Pass)
+                {
+                    Console.WriteLine("Local and Directory CodeBits match on defined metadata properties.");
+                }
+                else if (cmpValidationLevel == ValidationLevel.FailRecommended)
+                {
+                    Console.WriteLine("Warning: Local and directory codebits fail one or more recommended but optional comparisons:");
+                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
+                }
+                else
+                {
+                    Console.WriteLine("Error: Local and directory codebits fail one or more required comparisons:");
+                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
+                }
+                Console.WriteLine();
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine($"Failed to retrieve directory or compare metadata: {err.Message}");
+                return;
+            }
         }
 
         public static void ValidatePublishedCodebit(string url)
@@ -120,40 +169,27 @@ namespace CodeBit
 
         public static void ValidateDirectory(string domainName)
         {
-            string? dirRecord = null;
-            var txtRecords = WinDnsQuery.GetTxtRecords("_dir." + domainName);
-            if (txtRecords != null)
-            {
-                foreach (var txtRecord in txtRecords)
-                {
-                    if (txtRecord.StartsWith("dir="))
-                    {
-                        dirRecord = txtRecord;
-                        break;
-                    }
-                }
-            }
-            if (dirRecord == null)
+            var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
+            if (dirUrl is null)
             {
                 Console.WriteLine($"No dir TXT record found on domain '{domainName}'.");
                 Console.WriteLine($"DNS must include a TXT record on the domain '_dir.{domainName}' that contains\nthe URL, 'dir=<url of the directory>'.");
                 return;
             }
 
-            var dirUrl = dirRecord.Substring(4).Trim();
             Console.WriteLine($"DNS Success: Directory for '{domainName}' is located at '{dirUrl}'.");
 
-            Stream stream;
+            DirectoryReader reader;
             try
             {
-                stream = Http.Get(dirUrl);
+                reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
             }
             catch (Exception err)
             {
                 Console.WriteLine("Failed to read directory: " + err.Message);
                 return;
             }
-            using (var reader = new DirectoryReader(stream))
+            using (reader)
             {
                 var dirMetadata = reader.ReadDirectory();
 

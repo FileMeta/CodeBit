@@ -205,6 +205,8 @@ namespace CodeBit
         // a filename path (zero or more directory names concluding with a filename).
         static Regex s_rxName = new Regex("^(?:" + c_rxDomainName + ")(?:/" + c_rxFilename + ")*/(" + c_rxFilename + ")$");
 
+        static readonly char[] s_filenameDelimiters = new char[] { '/', '\\', ':' };
+
         public (ValidationLevel validationLevel, string validationDetail) Validate()
         {
             var validationLevel = ValidationLevel.Pass;
@@ -260,6 +262,19 @@ namespace CodeBit
                 validationDetail.AppendLine($"Property '{key_keywords}' must include '{val_keyword_codebit}'.");
             }
 
+            if (FilenameForValidation is not null)
+            {
+                int slash = Name.LastIndexOf('/');
+                string barename = (slash >= 0) ? Name.Substring(slash + 1) : Name;
+                slash = FilenameForValidation.LastIndexOfAny(s_filenameDelimiters);
+                string bareFilename = (slash >= 0) ? FilenameForValidation.Substring(slash + 1) : FilenameForValidation;
+                if (!string.Equals(barename, bareFilename, StringComparison.Ordinal))
+                {
+                    validationLevel |= ValidationLevel.FailMandatory;
+                    validationDetail.AppendLine($"Local filename '{bareFilename}' does not match CodeBit name '{barename}'.");
+                }
+            }
+
             // === Optional Properties ===
             if (ValidateOptionalSingle(key_description, ref validationLevel, validationDetail))
             {
@@ -291,12 +306,6 @@ namespace CodeBit
 
             CompareRequiredStrings(AtType, other.AtType, ref validationLevel, validationDetail, "@Type", thisLabel, otherLabel);
             CompareRequiredStrings(Name, other.Name, ref validationLevel, validationDetail, "Name", thisLabel, otherLabel);
-
-            if (!string.Equals(Name, other.Name, StringComparison.Ordinal))
-            {
-                validationDetail.AppendLine($"Error: {thisLabel} Name ({Name}) doesn't match {otherLabel} ({other.Name}).");
-                validationLevel |= ValidationLevel.FailMandatory;
-            }
 
             int cmp = Version.CompareTo(other.Version);
             if (cmp < 0)
