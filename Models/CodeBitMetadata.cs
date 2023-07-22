@@ -55,6 +55,8 @@ namespace CodeBit
 
         static IReadOnlyCollection<string> s_standardKeys = new HashSet<string>
         {
+            key_underType,
+            key_atType,
             key_name,
             key_version,
             key_url,
@@ -170,6 +172,7 @@ namespace CodeBit
         public override string ToString()
         {
             var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(AtType)) sb.AppendLine("_type: " + AtType);
             if (!string.IsNullOrEmpty(Name)) sb.AppendLine("name: " + Name);
             sb.AppendLine("version: " + Version.ToString());
             if (!string.IsNullOrEmpty(Url)) sb.AppendLine("url: " + Url);
@@ -272,6 +275,89 @@ namespace CodeBit
             ValidateOptionalSingle(key_license, ref validationLevel, validationDetail);
 
             return (validationLevel, validationDetail.ToString());
+        }
+
+        /// <summary>
+        /// Compare CodeBit with the another CodeBit and return detailed differences
+        /// </summary>
+        /// <param name="other">The CodeBit with which to compare.</param>
+        /// <param name="thisLabel">Label that refers to this CodeBit in the comparison messages.</param>
+        /// <param name="otherLabel">Label that refers to the other CodeBit in the comparison messages.</param>
+        /// <returns><see cref="ValidationLevel"/> and a string containing validation detail.</returns>
+        public (ValidationLevel validationLevel, string validationDetail) CompareTo(CodeBitMetadata other, string thisLabel, string otherLabel)
+        {
+            var validationLevel = ValidationLevel.Pass;
+            var validationDetail = new StringBuilder();
+
+            CompareRequiredStrings(AtType, other.AtType, ref validationLevel, validationDetail, "@Type", thisLabel, otherLabel);
+            CompareRequiredStrings(Name, other.Name, ref validationLevel, validationDetail, "Name", thisLabel, otherLabel);
+
+            if (!string.Equals(Name, other.Name, StringComparison.Ordinal))
+            {
+                validationDetail.AppendLine($"Error: {thisLabel} Name ({Name}) doesn't match {otherLabel} ({other.Name}).");
+                validationLevel |= ValidationLevel.FailMandatory;
+            }
+
+            int cmp = Version.CompareTo(other.Version);
+            if (cmp < 0)
+            {
+                validationDetail.AppendLine($"Error: {thisLabel} Version ({Version}) is older than {otherLabel} ({other.Version}).");
+                validationLevel |= ValidationLevel.FailMandatory;
+            }
+            if (cmp > 0)
+            {
+                validationDetail.AppendLine($"Error: {thisLabel} Version ({Version}) is newer than {otherLabel} ({other.Version}).");
+                validationLevel |= ValidationLevel.FailMandatory;
+            }
+
+            CompareRequiredStrings(Url, other.Url, ref validationLevel, validationDetail, "Url", thisLabel, otherLabel);
+
+            foreach(var keyword in Keywords)
+            {
+                if (!other.Keywords.Contains(keyword))
+                {
+                    validationDetail.AppendLine($"Warning: {thisLabel} Keywords includes '{keyword}' which {otherLabel} does not include.");
+                    validationLevel |= ValidationLevel.FailRecommended;
+                }
+            }
+            foreach (var keyword in other.Keywords)
+            {
+                if (!Keywords.Contains(keyword))
+                {
+                    validationDetail.AppendLine($"Warning: {otherLabel} Keywords includes '{keyword}' which {thisLabel} does not include.");
+                    validationLevel |= ValidationLevel.FailRecommended;
+                }
+            }
+
+            if (Math.Abs(DatePublished.UtcTicks - other.DatePublished.UtcTicks) > 10000) // More than one second difference
+            {
+                validationDetail.AppendLine($"Warning: {thisLabel} DatePublished ({DatePublishedStr}) doesn't match {otherLabel} ({other.DatePublishedStr}).");
+                validationLevel |= ValidationLevel.FailRecommended;
+            }
+
+            CompareOptionalStrings(Author, other.Author, ref validationLevel, validationDetail, "Author", thisLabel, otherLabel);
+            CompareOptionalStrings(Description, other.Description, ref validationLevel, validationDetail, "Description", thisLabel, otherLabel);
+            CompareOptionalStrings(License, other.License, ref validationLevel, validationDetail, "License", thisLabel, otherLabel);
+
+            return (validationLevel, validationDetail.ToString());
+        }
+
+        private static void CompareRequiredStrings(string thisStr, string otherStr, ref ValidationLevel validationLevel, StringBuilder validationDetail, string property, string thisLabel, string otherLabel, StringComparison strCmp = StringComparison.Ordinal)
+        {
+            if (!string.Equals(thisStr, otherStr, strCmp))
+            {
+                validationDetail.AppendLine($"Error: {thisLabel} {property} ({thisStr}) doesn't match {otherLabel} ({otherStr}).");
+                validationLevel |= ValidationLevel.FailMandatory;
+            }
+        }
+
+        private static void CompareOptionalStrings(string thisStr, string otherStr, ref ValidationLevel validationLevel, StringBuilder validationDetail, string property, string thisLabel, string otherLabel, StringComparison strCmp = StringComparison.Ordinal)
+        {
+            if (!string.Equals(thisStr, otherStr, strCmp))
+            {
+                validationDetail.AppendLine($"Warning: {thisLabel} {property} ({thisStr}) doesn't match {otherLabel} ({otherStr}).");
+                validationLevel |= ValidationLevel.FailRecommended;
+            }
         }
 
         /// <summary>

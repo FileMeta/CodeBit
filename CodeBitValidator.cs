@@ -21,11 +21,8 @@ namespace CodeBit
 
             try
             {
-                using (var reader = new StreamReader(path, Encoding.UTF8, true))
-                {
-                    metadata = CodeBitMetadata.Read(reader);
-                    (validationLevel, validationDetail) = metadata.Validate();
-                }
+                metadata = CodebitReader.ReadFromFile(path);
+                (validationLevel, validationDetail) = metadata.Validate();
 
                 if (validationLevel == ValidationLevel.Pass)
                 {
@@ -61,11 +58,8 @@ namespace CodeBit
 
             try
             {
-                using (var reader = new StreamReader(Http.Get(metadata.Url), Encoding.UTF8, true, 512, false))
-                {
-                    pubMetadata = CodeBitMetadata.Read(reader);
-                    (pubValidationLevel, pubValidationDetail) = pubMetadata.Validate();
-                }
+                pubMetadata = CodebitReader.ReadFromUrl(metadata.Url);
+                (pubValidationLevel, pubValidationDetail) = pubMetadata.Validate();
 
                 if (pubValidationLevel == ValidationLevel.Pass)
                 {
@@ -81,6 +75,7 @@ namespace CodeBit
                     Console.WriteLine("Published CodeBit fails one or more mandatory requirements:");
                     Console.Write(pubValidationDetail);
                 }
+                Console.WriteLine();
 
                 if (validationLevel > ValidationLevel.FailRecommended) return;
             }
@@ -90,17 +85,36 @@ namespace CodeBit
                 return;
             }
 
-            int cmp = metadata.Version.CompareTo(pubMetadata.Version);
-            if (cmp < 0)
+            Console.WriteLine("Comparing local with published copy...");
+            try
             {
-                Console.WriteLine($"Local version ({metadata.Version}) is older than the published version ({pubMetadata.Version}). Consider updating.");
+                (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = metadata.CompareTo(pubMetadata, "Local", "Published");
+
+                if (cmpValidationLevel == ValidationLevel.Pass)
+                {
+                    Console.WriteLine("Local and Published CodeBits match on defined metadata properties.");
+                }
+                else if (cmpValidationLevel == ValidationLevel.FailRecommended)
+                {
+                    Console.WriteLine("Warning: Local and published codebits fail one or more recommended but optional comparisons:");
+                    Console.Write(cmpValidationDetail);
+                }
+                else
+                {
+                    Console.WriteLine("Error: Local and published codebits fail one or more required comparisons:");
+                    Console.Write(cmpValidationDetail);
+                }
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine($"Failed to compare local and published CodeBit: {err.Message}");
                 return;
             }
-            if (cmp > 0)
-            {
-                Console.WriteLine($"Local version ({metadata.Version}) is newer than the published version ({pubMetadata.Version}). Are you preparing an update?");
-                return;
-            }
+
+        }
+
+        public static void ValidatePublishedCodebit(string url)
+        {
 
         }
 
