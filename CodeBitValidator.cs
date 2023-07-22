@@ -93,7 +93,7 @@ namespace CodeBit
 
                 if (cmpValidationLevel == ValidationLevel.Pass)
                 {
-                    Console.WriteLine("Local and Published CodeBits match on defined metadata properties.");
+                    Console.WriteLine("Local and Published CodeBits match.");
                 }
                 else if (cmpValidationLevel == ValidationLevel.FailRecommended)
                 {
@@ -141,7 +141,7 @@ namespace CodeBit
 
                 if (cmpValidationLevel == ValidationLevel.Pass)
                 {
-                    Console.WriteLine("Local and Directory CodeBits match on defined metadata properties.");
+                    Console.WriteLine("Local and Directory CodeBits match.");
                 }
                 else if (cmpValidationLevel == ValidationLevel.FailRecommended)
                 {

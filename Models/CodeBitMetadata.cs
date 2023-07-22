@@ -348,6 +348,32 @@ namespace CodeBit
             CompareOptionalStrings(Description, other.Description, ref validationLevel, validationDetail, "Description", thisLabel, otherLabel);
             CompareOptionalStrings(License, other.License, ref validationLevel, validationDetail, "License", thisLabel, otherLabel);
 
+            // Compare the rest
+            foreach (var pair in this)
+            {
+                if (s_standardKeys.Contains(pair.Key)) continue;
+                if (pair.Value is null) continue;
+                var thisStr = string.Join(';', pair.Value);
+                var otherValue = other.GetValues(pair.Key);
+                if (otherValue is null)
+                {
+                    validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} contains value({thisStr}) but {otherLabel} has no value.");
+                    validationLevel |= ValidationLevel.FailRecommended;
+                    continue;
+                }
+
+                var otherStr = otherValue is not null ? string.Join(';', pair.Value) : string.Empty;
+                CompareOptionalStrings(thisStr, otherStr, ref validationLevel, validationDetail, pair.Key, thisLabel, otherLabel);
+            }
+            foreach(var pair in other)
+            {
+                if (s_standardKeys.Contains(pair.Key)) continue;
+                if (pair.Value is null) continue;
+                if (ContainsKey(pair.Key)) continue;
+                validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} has no value but {otherLabel} includes value {string.Join(';', pair.Value)}.");
+                validationLevel |= ValidationLevel.FailRecommended;
+            }
+
             return (validationLevel, validationDetail.ToString());
         }
 
