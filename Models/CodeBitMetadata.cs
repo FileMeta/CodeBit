@@ -338,7 +338,7 @@ namespace CodeBit
                 }
             }
 
-            if (Math.Abs(DatePublished.UtcTicks - other.DatePublished.UtcTicks) > 10000) // More than one second difference
+             if (Math.Abs(DatePublished.UtcTicks - other.DatePublished.UtcTicks) > 10000) // More than one second difference
             {
                 validationDetail.AppendLine($"Warning: {thisLabel} DatePublished ({DatePublishedStr}) doesn't match {otherLabel} ({other.DatePublishedStr}).");
                 validationLevel |= ValidationLevel.FailRecommended;
