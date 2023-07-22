@@ -44,7 +44,7 @@ namespace CodeBit
         const string key_version = "version";
         const string key_url = "url";
         const string key_keywords = "keywords";
-        const string key_datePublished = "datepublished";
+        const string key_datePublished = "datePublished";
         const string key_author = "author";
         const string key_description = "description";
         const string key_license = "license";
