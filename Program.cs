@@ -24,7 +24,7 @@ Actions:
 ";
 
         static Action? s_operation;
-        static string? s_target;
+        static string s_target = string.Empty;
 
         static void Main(string[] args)
         {
@@ -87,11 +87,12 @@ Actions:
 
             if (getTarget)
             {
-                s_target = cl.ReadNextArg();
-                if (s_target == null)
+                var target = cl.ReadNextArg();
+                if (target == null)
                 {
                     cl.ThrowValueError("Expected target for operation.");
                 }
+                s_target = target;
             }
 
             while (cl.MoveNext())
@@ -108,12 +109,15 @@ Actions:
 
         static void Validate()
         {
-            CodeBitValidator.ValidateFile(s_target ?? string.Empty);
+            if (s_target.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || s_target.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                CodeBitValidator.ValidatePublishedCodebit(s_target);
+            else
+                CodeBitValidator.ValidateFile(s_target);
         }
 
         static void ValidateDirectory()
         {
-            CodeBitValidator.ValidateDirectory(s_target ?? string.Empty);
+            CodeBitValidator.ValidateDirectory(s_target);
         }
 
         static void GetSyntax()

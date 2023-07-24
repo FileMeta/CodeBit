@@ -10,23 +10,47 @@ namespace CodeBit
 {
     internal static class MetadataLoader
     {
-        public static CodeBitMetadata ReadCodeBitFromFile(string filename)
+        /// <summary>
+        /// Load CodeBit Metadata from a file
+        /// </summary>
+        /// <param name="filename">The Filename</param>
+        /// <returns>Metadaata or Null if file not found.</returns>
+        public static CodeBitMetadata? ReadCodeBitFromFile(string filename)
         {
-            using (var reader = new StreamReader(filename, Encoding.UTF8, true))
+            try
             {
-                return CodeBitMetadata.Read(reader);
+                using (var reader = new StreamReader(filename, Encoding.UTF8, true))
+                {
+                    return CodeBitMetadata.Read(reader);
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
             }
         }
 
-        public static CodeBitMetadata ReadCodeBitFromUrl(string url)
+        public static CodeBitMetadata? ReadCodeBitFromUrl(string url)
         {
-            using (var reader = new StreamReader(Http.Get(url), Encoding.UTF8, true, 512, false))
+            try
             {
-                return CodeBitMetadata.Read(reader);
+                using (var reader = new StreamReader(Http.Get(url), Encoding.UTF8, true, 512, false))
+                {
+                    return CodeBitMetadata.Read(reader);
+                }
+            }
+            catch (HttpRequestException err)
+            {
+                if (err.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+                throw;
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return null; // Host not found.
             }
         }
 
-        public static CodeBitMetadata Read(string urlOrFilename)
+        public static CodeBitMetadata? Read(string urlOrFilename)
         {
             return (urlOrFilename.StartsWith("http://") || urlOrFilename.StartsWith("https://"))
                 ? ReadCodeBitFromUrl(urlOrFilename)
@@ -42,7 +66,6 @@ namespace CodeBit
 
         public static string? GetDirectoryUrl(string domainName)
         {
-            string? dirRecord = null;
             var txtRecords = WinDnsQuery.GetTxtRecords("_dir." + domainName);
             if (txtRecords != null)
             {

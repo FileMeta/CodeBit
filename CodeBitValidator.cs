@@ -164,7 +164,43 @@ namespace CodeBit
 
         public static void ValidatePublishedCodebit(string url)
         {
+            CodeBitMetadata? pubMetadata;
+            ValidationLevel pubValidationLevel;
+            string pubValidationDetail;
 
+            try
+            {
+                pubMetadata = MetadataLoader.ReadCodeBitFromUrl(url);
+                if (pubMetadata is null)
+                {
+                    Console.WriteLine($"'{url}' not found.");
+                    return;
+                }
+                (pubValidationLevel, pubValidationDetail) = pubMetadata.Validate();
+
+                if (pubValidationLevel == ValidationLevel.Pass)
+                {
+                    Console.WriteLine("Published CodeBit metadata passes validation.");
+                }
+                else if (pubValidationLevel == ValidationLevel.FailRecommended)
+                {
+                    Console.WriteLine("Warning: Published CodeBit fails one or more recommended but optional requirements:");
+                    Console.Out.WriteLineIndented(3, pubValidationDetail);
+                }
+                else
+                {
+                    Console.WriteLine("Published CodeBit fails one or more mandatory requirements:");
+                    Console.Out.WriteLineIndented(3, pubValidationDetail);
+                }
+                Console.WriteLine();
+
+                if (pubValidationLevel > ValidationLevel.FailRecommended) return;
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine($"Failed to read and parse published CodeBit: {err.Message}");
+                return;
+            }
         }
 
         public static void ValidateDirectory(string domainName)

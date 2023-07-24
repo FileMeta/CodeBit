@@ -18,6 +18,21 @@
       "commandName": "Project",
       "commandLineArgs": "ValidateDirectory bad.FileMeta.org",
       "workingDirectory": ".\\CodeBits"
+    },
+    "Validate FileNotFound": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate NotFound.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "Validate URL 404": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/NotPresent404.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "Validate URL Bad Domain": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate https://invalid.sample.com/Pred/something.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     }
   }
 }
