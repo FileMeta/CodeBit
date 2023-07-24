@@ -357,7 +357,7 @@ namespace CodeBit
                 var otherValue = other.GetValues(pair.Key);
                 if (otherValue is null)
                 {
-                    validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} contains value({thisStr}) but {otherLabel} has no value.");
+                    validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} contains value ({thisStr}) but {otherLabel} has no value.");
                     validationLevel |= ValidationLevel.FailRecommended;
                     continue;
                 }

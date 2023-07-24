@@ -21,7 +21,9 @@ namespace CodeBit
             {
                 using (var reader = new StreamReader(filename, Encoding.UTF8, true))
                 {
-                    return CodeBitMetadata.Read(reader);
+                    var metadata = CodeBitMetadata.Read(reader);
+                    metadata.FilenameForValidation = filename;
+                    return metadata;
                 }
             }
             catch (FileNotFoundException)
@@ -50,9 +52,14 @@ namespace CodeBit
             }
         }
 
+        public static bool IsHttpUrl(string urlOrFilename)
+        {
+            return urlOrFilename.StartsWith("http://") || urlOrFilename.StartsWith("https://");
+        }
+
         public static CodeBitMetadata? Read(string urlOrFilename)
         {
-            return (urlOrFilename.StartsWith("http://") || urlOrFilename.StartsWith("https://"))
+            return (IsHttpUrl(urlOrFilename))
                 ? ReadCodeBitFromUrl(urlOrFilename)
                 : ReadCodeBitFromFile(urlOrFilename);
         }
@@ -78,9 +85,22 @@ namespace CodeBit
             return null;
         }
 
-        public static DirectoryReader GetDirectoryFromUrl(string url)
+        public static DirectoryReader? GetDirectoryFromUrl(string url)
         {
-            return new DirectoryReader(Http.Get(url));
+            try
+            {
+                return new DirectoryReader(Http.Get(url));
+            }
+            catch (HttpRequestException err)
+            {
+                if (err.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+                throw;
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return null; // Host not found.
+            }
+
         }
     }
 }

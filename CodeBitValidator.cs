@@ -1,6 +1,7 @@
 ﻿//#define RAW
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
@@ -12,195 +13,34 @@ namespace CodeBit
     {
         public static void ValidateFile(string filename)
         {
-            var path = Path.GetFullPath(filename);
-            Console.WriteLine($"Validating CodeBit metadata in '{path}'...");
+            (var fileValidationLevel, var fileMetadata) = ValidateAndReport(filename, "Metadata");
+            if (fileMetadata is null) return;
 
-            CodeBitMetadata metadata;
-            ValidationLevel validationLevel;
-            string validationDetail;
+            Console.Write(fileMetadata.ToString());
+            Console.WriteLine();
+            if (fileValidationLevel > ValidationLevel.FailRecommended) return;
 
-            try
+            (var pubValidationLevel, var pubMetadata) = ValidateAndReport(fileMetadata.Url, "Published Copy");
+
+            if (pubMetadata is not null && pubValidationLevel <= ValidationLevel.FailRecommended)
             {
-                metadata = MetadataLoader.ReadCodeBitFromFile(path);
-                metadata.FilenameForValidation = filename;
-                (validationLevel, validationDetail) = metadata.Validate();
-
-                if (validationLevel == ValidationLevel.Pass)
-                {
-                    Console.WriteLine("CodeBit metadata passes validation.");
-                }
-                else if (validationLevel == ValidationLevel.FailRecommended)
-                {
-                    Console.WriteLine("Warning: CodeBit fails one or more recommended but optional requirements:");
-                    Console.Out.WriteLineIndented(3, validationDetail);
-                }
-                else
-                {
-                    Console.WriteLine("CodeBit fails one or more mandatory requirements:");
-                    Console.Out.WriteLineIndented(3, validationDetail);
-                }
-
-                Console.WriteLine();
-                Console.Write(metadata.ToString());
-                Console.WriteLine();
-                if (validationLevel > ValidationLevel.FailRecommended) return;
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine($"Failed to read and parse CodeBit: {err.Message}");
-                return;
+                Console.WriteLine("Comparing File with Published Copy...");
+                CompareAndReport(fileMetadata, pubMetadata, "File", "Published");
             }
 
-            Console.WriteLine($"Validating published copy at '{metadata.Url}'...");
-
-            CodeBitMetadata pubMetadata;
-            ValidationLevel pubValidationLevel;
-            string pubValidationDetail;
-
-            try
-            {
-                pubMetadata = MetadataLoader.ReadCodeBitFromUrl(metadata.Url);
-                (pubValidationLevel, pubValidationDetail) = pubMetadata.Validate();
-
-                if (pubValidationLevel == ValidationLevel.Pass)
-                {
-                    Console.WriteLine("Published CodeBit metadata passes validation.");
-                }
-                else if (pubValidationLevel == ValidationLevel.FailRecommended)
-                {
-                    Console.WriteLine("Warning: Published CodeBit fails one or more recommended but optional requirements:");
-                    Console.Out.WriteLineIndented(3, pubValidationDetail);
-                }
-                else
-                {
-                    Console.WriteLine("Published CodeBit fails one or more mandatory requirements:");
-                    Console.Out.WriteLineIndented(3, pubValidationDetail);
-                }
-                Console.WriteLine();
-
-                if (validationLevel > ValidationLevel.FailRecommended) return;
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine($"Failed to read and parse published CodeBit: {err.Message}");
-                return;
-            }
-
-            Console.WriteLine("Comparing local with published copy...");
-            try
-            {
-                (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = metadata.CompareTo(pubMetadata, "Local", "Published");
-
-                if (cmpValidationLevel == ValidationLevel.Pass)
-                {
-                    Console.WriteLine("Local and Published CodeBits match.");
-                }
-                else if (cmpValidationLevel == ValidationLevel.FailRecommended)
-                {
-                    Console.WriteLine("Warning: Local and published codebits fail one or more recommended but optional comparisons:");
-                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
-                }
-                else
-                {
-                    Console.WriteLine("Error: Local and published codebits fail one or more required comparisons:");
-                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
-                }
-                Console.WriteLine();
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine($"Failed to compare local and published CodeBit: {err.Message}");
-                return;
-            }
-
-            Console.WriteLine("Comparing with directory...");
-            try
-            {
-                string domainName = MetadataLoader.GetCodebitDomainName(metadata.Name);
-                var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
-                if (dirUrl is null)
-                {
-                    Console.WriteLine($"No DNS directory entry for domain '{domainName}'.");
-                    return;
-                }
-                var reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
-
-                CodeBitMetadata? dirMetadata;
-                for (; ; )
-                {
-                    dirMetadata = reader.ReadCodeBit();
-                    if (dirMetadata is null)
-                    {
-                        Console.WriteLine($"Codebit '{metadata.Name}' is not listed in the directory.");
-                        return;
-                    }
-                    if (string.Equals(dirMetadata.Name, metadata.Name, StringComparison.Ordinal)) break;
-                }
-
-                (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = metadata.CompareTo(dirMetadata, "Local", "Directory");
-
-                if (cmpValidationLevel == ValidationLevel.Pass)
-                {
-                    Console.WriteLine("Local and Directory CodeBits match.");
-                }
-                else if (cmpValidationLevel == ValidationLevel.FailRecommended)
-                {
-                    Console.WriteLine("Warning: Local and directory codebits fail one or more recommended but optional comparisons:");
-                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
-                }
-                else
-                {
-                    Console.WriteLine("Error: Local and directory codebits fail one or more required comparisons:");
-                    Console.Out.WriteLineIndented(3, cmpValidationDetail);
-                }
-                Console.WriteLine();
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine($"Failed to retrieve directory or compare metadata: {err.Message}");
-                return;
-            }
+            CompareWithDirectoryAndReport(fileMetadata, "File");
         }
 
         public static void ValidatePublishedCodebit(string url)
         {
-            CodeBitMetadata? pubMetadata;
-            ValidationLevel pubValidationLevel;
-            string pubValidationDetail;
+            (var fileValidationLevel, var metadata) = ValidateAndReport(url, "Published Metadata");
+            if (metadata is null) return;
 
-            try
-            {
-                pubMetadata = MetadataLoader.ReadCodeBitFromUrl(url);
-                if (pubMetadata is null)
-                {
-                    Console.WriteLine($"'{url}' not found.");
-                    return;
-                }
-                (pubValidationLevel, pubValidationDetail) = pubMetadata.Validate();
+            Console.Write(metadata.ToString());
+            Console.WriteLine();
+            if (fileValidationLevel > ValidationLevel.FailRecommended) return;
 
-                if (pubValidationLevel == ValidationLevel.Pass)
-                {
-                    Console.WriteLine("Published CodeBit metadata passes validation.");
-                }
-                else if (pubValidationLevel == ValidationLevel.FailRecommended)
-                {
-                    Console.WriteLine("Warning: Published CodeBit fails one or more recommended but optional requirements:");
-                    Console.Out.WriteLineIndented(3, pubValidationDetail);
-                }
-                else
-                {
-                    Console.WriteLine("Published CodeBit fails one or more mandatory requirements:");
-                    Console.Out.WriteLineIndented(3, pubValidationDetail);
-                }
-                Console.WriteLine();
-
-                if (pubValidationLevel > ValidationLevel.FailRecommended) return;
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine($"Failed to read and parse published CodeBit: {err.Message}");
-                return;
-            }
+            CompareWithDirectoryAndReport(metadata, "Published Metadata");
         }
 
         public static void ValidateDirectory(string domainName)
@@ -293,12 +133,102 @@ namespace CodeBit
             }
         }
 
-        /*
-        static (bool match, string detail) CompareMetadata(CodeBitMetadata a, CodeBitMetadata b)
+        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateAndReport(string filenameOrUrl, string label)
         {
-            if (!string.Equals(a.Version, b.Version))
+            Console.WriteLine($"Validating {label} in '{filenameOrUrl}'...");
+            var metadata = MetadataLoader.Read(filenameOrUrl);
+            if (metadata == null)
+            {
+                Console.WriteLine($"CodeBit '{filenameOrUrl}' not found.");
+                Console.WriteLine();
+                return (ValidationLevel.Fail, null);
+            }
+            return ValidateAndReport(metadata);
         }
-        */
+
+        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateAndReport(CodeBitMetadata metadata)
+        {
+            (var validationLevel, var validationDetail) = metadata.Validate();
+
+            if (validationLevel == ValidationLevel.Pass)
+            {
+                Console.WriteLine("CodeBit metadata passes validation.");
+            }
+            else if (validationLevel == ValidationLevel.FailRecommended)
+            {
+                Console.WriteLine("Warning: CodeBit fails one or more recommended but optional requirements:");
+                Console.Out.WriteLineIndented(3, validationDetail);
+            }
+            else
+            {
+                Console.WriteLine("CodeBit fails one or more mandatory requirements:");
+                Console.Out.WriteLineIndented(3, validationDetail);
+            }
+            Console.WriteLine();
+            return (validationLevel, metadata);
+        }
+
+        private static void CompareAndReport(CodeBitMetadata a, CodeBitMetadata b, string aLabel, string bLabel)
+        {
+            (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = a.CompareTo(b, aLabel, bLabel);
+
+            if (cmpValidationLevel == ValidationLevel.Pass)
+            {
+                Console.WriteLine($"{aLabel} and {bLabel} CodeBits match.");
+            }
+            else if (cmpValidationLevel == ValidationLevel.FailRecommended)
+            {
+                Console.WriteLine($"{aLabel} and {bLabel} CodeBits fail one or more recommended but optional comparisons:");
+                Console.Out.WriteLineIndented(3, cmpValidationDetail);
+            }
+            else
+            {
+                Console.WriteLine($"{aLabel} and {bLabel} CodeBits fail one or more required comparisons:");
+                Console.Out.WriteLineIndented(3, cmpValidationDetail);
+            }
+            Console.WriteLine();
+        }
+
+        private static void CompareWithDirectoryAndReport(CodeBitMetadata a, string aLabel)
+        {
+            Console.WriteLine($"Validating directory entry for '{a.Name}'...");
+
+            string domainName = MetadataLoader.GetCodebitDomainName(a.Name);
+            var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
+            if (dirUrl is null)
+            {
+                Console.WriteLine($"No DNS directory entry for domain '{domainName}'.");
+                Console.WriteLine();
+                return;
+            }
+            var reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
+            if (reader == null)
+            {
+                Console.WriteLine($"Unable to read directory for domain '{domainName} from URL '{dirUrl}'.");
+                Console.WriteLine();
+                return;
+            }
+
+            CodeBitMetadata? dirMetadata;
+            for (; ; )
+            {
+                dirMetadata = reader.ReadCodeBit();
+                if (dirMetadata is null)
+                {
+                    Console.WriteLine($"Codebit '{a.Name}' is not listed in the directory.");
+                    Console.WriteLine();
+                    return;
+                }
+                if (string.Equals(dirMetadata.Name, a.Name, StringComparison.Ordinal)) break;
+            }
+
+            (var validationLevel, var validationDetail) = ValidateAndReport(dirMetadata);
+            if (validationLevel > ValidationLevel.FailRecommended) return;
+
+            Console.WriteLine($"Comparing {aLabel} with directory...");
+            CompareAndReport(a, dirMetadata, aLabel, "Directory");
+        }
+
     }
 
     static class IndentedWrite
