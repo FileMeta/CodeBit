@@ -249,10 +249,15 @@ namespace CodeBit
 
             if (ValidateRequiredSingle(key_url, ref validationLevel, validationDetail))
             {
-                if (!Uri.TryCreate(Url, UriKind.Absolute, out _))
+                if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri uri))
                 {
                     validationLevel |= ValidationLevel.FailMandatory;
                     validationDetail.AppendLine("'url' property is not a valid URL.");
+                }
+                if (uri == null || uri.Scheme != "http" && uri.Scheme != "https")
+                {
+                    validationLevel |= ValidationLevel.FailMandatory;
+                    validationDetail.AppendLine("'url' scheme is not http or https.");
                 }
             }
 
@@ -370,7 +375,7 @@ namespace CodeBit
                 if (s_standardKeys.Contains(pair.Key)) continue;
                 if (pair.Value is null) continue;
                 if (ContainsKey(pair.Key)) continue;
-                validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} has no value but {otherLabel} includes value {string.Join(';', pair.Value)}.");
+                validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} has no value but {otherLabel} includes value ({string.Join(';', pair.Value)}).");
                 validationLevel |= ValidationLevel.FailRecommended;
             }
 

@@ -33,6 +33,11 @@
       "commandName": "Project",
       "commandLineArgs": "Validate https://invalid.sample.com/Pred/something.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "Validate URL": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/VideoFeedback.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     }
   }
 }

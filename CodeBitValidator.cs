@@ -56,15 +56,13 @@ namespace CodeBit
             Console.WriteLine($"DNS Success: Directory for '{domainName}' is located at '{dirUrl}'.");
 
             DirectoryReader reader;
-            try
+            reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
+            if (reader is null)
             {
-                reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine("Failed to read directory: " + err.Message);
+                Console.WriteLine("Directory not found.");
                 return;
             }
+
             using (reader)
             {
                 var dirMetadata = reader.ReadDirectory();
@@ -87,47 +85,62 @@ namespace CodeBit
                     Console.WriteLine("Directory global metadata fails one or more mandatory requirements:");
                     Console.WriteLine(validationDetail);
                 }
+                Console.WriteLine();
 
                 int nCodeBits = 0;
+                int nFailToValidate = 0;
+                int nFailToCompare = 0;
                 int nSourceCode = 0;
                 int nOther = 0;
                 for (; ; )
                 {
                     var codebitMetadata = reader.ReadCodeBit();
                     if (codebitMetadata == null) break;
+                    Console.WriteLine($"=== Directory Entry: {(codebitMetadata.Name ?? "(Unknown)")}");
 
                     if (codebitMetadata.IsCodeBit)
                     {
                         nCodeBits++;
-                        (validationLevel, validationDetail) = codebitMetadata.Validate();
+                        validationLevel = ValidateAndReport(codebitMetadata);
 
-                        if (validationLevel == ValidationLevel.Pass)
+                        if (validationLevel <= ValidationLevel.FailRecommended)
                         {
-                            Console.Out.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry passes validation.");
-                        }
-                        else if (validationLevel == ValidationLevel.FailRecommended)
-                        {
-                            Console.Out.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry fails one or more recommended but optional requirements:");
-                            Console.Out.WriteLineIndented(3, validationDetail);
+                            (var pubValidationLevel, var pubMetadata) = ValidateAndReport(codebitMetadata.Url, "Published Codebit");
+                            if (pubValidationLevel <= ValidationLevel.FailRecommended)
+                            {
+                                if (ValidationLevel.FailRecommended < CompareAndReport(codebitMetadata, pubMetadata, "Directory", "Published"))
+                                {
+                                    ++nFailToCompare;
+                                }
+                            }
+                            else
+                            {
+                                ++nFailToValidate;
+                            }
                         }
                         else
                         {
-                            Console.Out.WriteLine($"{codebitMetadata.Name} v{codebitMetadata.Version}: CodeBit directory entry fails one or more mandatory requirements:");
-                            Console.Out.WriteLineIndented(3, validationDetail);
+                            ++nFailToValidate;
                         }
                     }
                     else if (codebitMetadata.IsSoftwareSourceCode)
                     {
+                        Console.WriteLine("Non-Codebit Source Code.");
+                        Console.WriteLine();
                         ++nSourceCode;
                     }
                     else
                     {
+                        Console.WriteLine("Not Source Code.");
+                        Console.WriteLine();
                         ++nOther;
                     }
 
                 }
 
                 Console.WriteLine($"{nCodeBits} CodeBits in the directory.");
+                if (nFailToValidate > 0) Console.WriteLine($"{nFailToValidate} CodeBits failed validation.");
+                if (nFailToCompare > 0) Console.WriteLine($"{nFailToCompare} CodeBits failed comparison.");
                 if (nSourceCode > 0) Console.WriteLine($"{nSourceCode} Non-CodeBit source code entries in the directory.");
                 if (nOther > 0) Console.WriteLine($"{nOther} other entries in the directory.");
             }
@@ -143,10 +156,10 @@ namespace CodeBit
                 Console.WriteLine();
                 return (ValidationLevel.Fail, null);
             }
-            return ValidateAndReport(metadata);
+            return (ValidateAndReport(metadata), metadata);
         }
 
-        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateAndReport(CodeBitMetadata metadata)
+        private static ValidationLevel ValidateAndReport(CodeBitMetadata metadata)
         {
             (var validationLevel, var validationDetail) = metadata.Validate();
 
@@ -165,10 +178,10 @@ namespace CodeBit
                 Console.Out.WriteLineIndented(3, validationDetail);
             }
             Console.WriteLine();
-            return (validationLevel, metadata);
+            return validationLevel;
         }
 
-        private static void CompareAndReport(CodeBitMetadata a, CodeBitMetadata b, string aLabel, string bLabel)
+        private static ValidationLevel CompareAndReport(CodeBitMetadata a, CodeBitMetadata b, string aLabel, string bLabel)
         {
             (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = a.CompareTo(b, aLabel, bLabel);
 
@@ -187,6 +200,7 @@ namespace CodeBit
                 Console.Out.WriteLineIndented(3, cmpValidationDetail);
             }
             Console.WriteLine();
+            return cmpValidationLevel;
         }
 
         private static void CompareWithDirectoryAndReport(CodeBitMetadata a, string aLabel)
@@ -222,7 +236,7 @@ namespace CodeBit
                 if (string.Equals(dirMetadata.Name, a.Name, StringComparison.Ordinal)) break;
             }
 
-            (var validationLevel, var validationDetail) = ValidateAndReport(dirMetadata);
+            var validationLevel = ValidateAndReport(dirMetadata);
             if (validationLevel > ValidationLevel.FailRecommended) return;
 
             Console.WriteLine($"Comparing {aLabel} with directory...");
