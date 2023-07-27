@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using Bredd;
+using FileMeta;
 
 namespace CodeBit
 {
@@ -205,7 +206,7 @@ namespace CodeBit
 
         private static void CompareWithDirectoryAndReport(CodeBitMetadata a, string aLabel)
         {
-            Console.WriteLine($"Validating directory entry for '{a.Name}'...");
+            Console.WriteLine($"Validating directory entry for '{a.Name}' v{a.Version}...");
 
             string domainName = MetadataLoader.GetCodebitDomainName(a.Name);
             var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
@@ -223,17 +224,26 @@ namespace CodeBit
                 return;
             }
 
-            CodeBitMetadata? dirMetadata;
+            CodeBitMetadata? dirMetadata = null;
+            SemVer bestMatch = SemVer.Zero;
             for (; ; )
             {
-                dirMetadata = reader.ReadCodeBit();
-                if (dirMetadata is null)
+                var candidate = reader.ReadCodeBit();
+                if (candidate is null) break;
+                if (string.Equals(candidate.Name, a.Name, StringComparison.Ordinal)
+                    && candidate.Version.CompareTo(bestMatch) > 0
+                    && candidate.Version.CompareTo(a.Version) <= 0)
                 {
-                    Console.WriteLine($"Codebit '{a.Name}' is not listed in the directory.");
-                    Console.WriteLine();
-                    return;
+                    dirMetadata = candidate;
+                    bestMatch = candidate.Version;
                 }
-                if (string.Equals(dirMetadata.Name, a.Name, StringComparison.Ordinal)) break;
+            }
+            
+            if (dirMetadata is null)
+            {
+                Console.WriteLine($"Codebit '{a.Name}' v{a.Version} is not listed in the directory.");
+                Console.WriteLine();
+                return;
             }
 
             var validationLevel = ValidateAndReport(dirMetadata);

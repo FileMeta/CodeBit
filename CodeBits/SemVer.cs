@@ -362,7 +362,7 @@ namespace FileMeta
             }
 
             // Major version
-            int major = 0;
+            int major;
             if (p < s.Length && char.IsDigit(s[p]))
             {
                 (major, term) = ParseIntComponent(s, ref p, cMajor, messages);
@@ -422,6 +422,89 @@ namespace FileMeta
                 return (Valid, result, string.Empty);
             return (Tolerable, result, messages.ToString());
         }
+
+        /// <summary>
+        /// Parse a semantic version for search, gracefully degrading if the format isn't perfect.
+        /// </summary>
+        /// <param name="s">A string in semantic versioning format to be parsed.</param>
+        /// <returns>The parsed value.</returns>
+        /// <remarks>
+        /// <para>The first part that is missing or fails to parse will be set to the maximum value.
+        /// All subsequent parts will also be set to max.
+        /// </para>
+        /// <para>When searching a directory, the best match will be the highest version
+        /// (per <see cref="CompareTo"/>) that doesn't exceed thie search value. Note that
+        /// a version without <see cref="Prerelease"/> is considered later so the max value for
+        /// Prerelease is empty string. <see cref="Build"/> is not used in comparisons so its
+        /// max is also set to empty string if it is not included.</para>
+        /// <para>Always succeeds regardless of the value to be parsed.</para>
+        /// </remarks>
+        public static SemVer ParseForSearch(string s)
+        {
+            var messages = new StringBuilder();
+            char term;
+            int p = 0;
+
+            // Ignore a leading v.
+            if (s.Length > 0 && (s[0] == 'v' || s[0] == 'V'))
+            {
+                p = 1;
+            }
+
+            // Major version
+            int major = 0;
+            if (p < s.Length && char.IsDigit(s[p]))
+            {
+                (major, term) = ParseIntComponent(s, ref p, cMajor, messages);
+            }
+            else
+            {
+                return new SemVer(int.MaxValue, int.MaxValue, int.MaxValue);
+            }
+
+            // Minor version
+            int minor = 0;
+            if (term == '.')
+            {
+                ++p;
+                (minor, term) = ParseIntComponent(s, ref p, cMinor, messages);
+            }
+            else
+            {
+                return new SemVer(major, int.MaxValue, int.MaxValue);
+            }
+
+            // Patch
+            int patch = 0;
+            if (term == '.')
+            {
+                ++p;
+                (patch, term) = ParseIntComponent(s, ref p, cPatch, messages);
+            }
+            else
+            {
+                return new SemVer(major, minor, int.MaxValue);
+            }
+
+            // Prerelease
+            string? prerelease = null;
+            if (term == '-')
+            {
+                ++p;
+                (prerelease, term) = ParseTailComponent(s, ref p, cPrerelease, messages);
+            }
+
+            // Build
+            string? build = null;
+            if (term == '+')
+            {
+                ++p;
+                (build, term) = ParseTailComponent(s, ref p, cBuild, messages);
+            }
+
+            return  new SemVer(major, minor, patch, prerelease, build);
+        }
+
 
         private static (int value, char term) ParseIntComponent(string s, ref int p, string partName, StringBuilder messages)
         {
