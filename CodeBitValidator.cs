@@ -91,7 +91,7 @@ namespace CodeBit
 
             Console.WriteLine($"DNS Success: Directory for '{domainName}' is located at '{dirUrl}'.");
 
-            DirectoryReader reader;
+            DirectoryReader? reader;
             reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
             if (reader is null)
             {
