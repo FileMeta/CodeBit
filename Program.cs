@@ -61,6 +61,11 @@ Actions:
                     getTarget = true;
                     break;
 
+                case "validatebyurl":
+                    s_operation = ValidateByUrl;
+                    getTarget = true;
+                    break;
+
                 case "validatebyname":
                     s_operation = ValidateByName;
                     getTarget = true;
@@ -127,10 +132,12 @@ Actions:
 
         static void Validate()
         {
-            if (s_target.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || s_target.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-                CodeBitValidator.ValidatePublishedCodebit(s_target);
-            else
-                CodeBitValidator.ValidateFile(s_target);
+            CodeBitValidator.ValidateFile(s_target);
+        }
+
+        static void ValidateByUrl()
+        {
+            CodeBitValidator.ValidatePublishedCodebit(s_target);
         }
 
         static void ValidateByName()

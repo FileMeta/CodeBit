@@ -15,14 +15,14 @@ namespace CodeBit
     {
         public static void ValidateFile(string filename)
         {
-            (var fileValidationLevel, var fileMetadata) = ValidateAndReport(filename, "Metadata");
+            (var fileValidationLevel, var fileMetadata) = ValidateFileAndReport(filename, "Metadata");
             if (fileMetadata is null) return;
 
             Console.Write(fileMetadata.ToString());
             Console.WriteLine();
             if (fileValidationLevel > ValidationLevel.FailRecommended) return;
 
-            (var pubValidationLevel, var pubMetadata) = ValidateAndReport(fileMetadata.Url, "Published Copy");
+            (var pubValidationLevel, var pubMetadata) = ValidateUrlAndReport(fileMetadata.Url, "Published Copy");
 
             if (pubMetadata is not null && pubValidationLevel <= ValidationLevel.FailRecommended)
             {
@@ -35,7 +35,7 @@ namespace CodeBit
 
         public static void ValidatePublishedCodebit(string url)
         {
-            (var fileValidationLevel, var metadata) = ValidateAndReport(url, "Published Metadata");
+            (var fileValidationLevel, var metadata) = ValidateUrlAndReport(url, "Published Metadata");
             if (metadata is null) return;
 
             Console.Write(metadata.ToString());
@@ -66,7 +66,7 @@ namespace CodeBit
                 return;
             }
 
-            (var pubValidationLevel, var pubMetadata) = ValidateAndReport(dirMetadata.Url, "Published Copy");
+            (var pubValidationLevel, var pubMetadata) = ValidateUrlAndReport(dirMetadata.Url, "Published Copy");
             if (pubMetadata is null) return;
 
             Console.Write(pubMetadata.ToString());
@@ -141,7 +141,7 @@ namespace CodeBit
 
                         if (validationLevel <= ValidationLevel.FailRecommended)
                         {
-                            (var pubValidationLevel, var pubMetadata) = ValidateAndReport(codebitMetadata.Url, "Published Codebit");
+                            (var pubValidationLevel, var pubMetadata) = ValidateUrlAndReport(codebitMetadata.Url, "Published Codebit");
                             if (pubValidationLevel <= ValidationLevel.FailRecommended)
                             {
                                 if (ValidationLevel.FailRecommended < CompareAndReport(codebitMetadata, pubMetadata, "Directory", "Published"))
@@ -182,13 +182,23 @@ namespace CodeBit
             }
         }
 
-        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateAndReport(string filenameOrUrl, string label)
+        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateFileAndReport(string filename, string label)
         {
-            Console.WriteLine($"Validating {label} in '{filenameOrUrl}'...");
-            var metadata = MetadataLoader.Read(filenameOrUrl);
-            if (metadata == null)
+            Console.WriteLine($"Validating {label} in '{filename}'...");
+            return ValidateAndReport(MetadataLoader.ReadCodeBitFromFile(filename), label);
+        }
+
+        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateUrlAndReport(string url, string label)
+        {
+            Console.WriteLine($"Validating {label} in '{url}'...");
+            return ValidateAndReport(MetadataLoader.ReadCodeBitFromUrl(url), label);
+        }
+
+        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateAndReport(CodeBitMetadata? metadata, string label)
+        {
+            if (metadata is null)
             {
-                Console.WriteLine($"CodeBit '{filenameOrUrl}' not found.");
+                Console.WriteLine($"CodeBit not found.");
                 Console.WriteLine();
                 return (ValidationLevel.Fail, null);
             }
