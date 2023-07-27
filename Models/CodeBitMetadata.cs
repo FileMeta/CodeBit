@@ -303,14 +303,19 @@ namespace CodeBit
         /// <param name="other">The CodeBit with which to compare.</param>
         /// <param name="thisLabel">Label that refers to this CodeBit in the comparison messages.</param>
         /// <param name="otherLabel">Label that refers to the other CodeBit in the comparison messages.</param>
+        /// <param name="expectUrlMatch">True if URLs should match.</param>
         /// <returns><see cref="ValidationLevel"/> and a string containing validation detail.</returns>
-        public (ValidationLevel validationLevel, string validationDetail) CompareTo(CodeBitMetadata other, string thisLabel, string otherLabel)
+        public (ValidationLevel validationLevel, string validationDetail) CompareTo(CodeBitMetadata other, string thisLabel, string otherLabel, bool expectUrlMatch = false)
         {
             var validationLevel = ValidationLevel.Pass;
             var validationDetail = new StringBuilder();
 
             CompareRequiredStrings(AtType, other.AtType, ref validationLevel, validationDetail, "@Type", thisLabel, otherLabel);
             CompareRequiredStrings(Name, other.Name, ref validationLevel, validationDetail, "Name", thisLabel, otherLabel);
+
+            // URL doesn't necessarily have to match depending on whether the codebit is the latest one.
+            if (expectUrlMatch)
+                CompareRequiredStrings(Url, other.Url, ref validationLevel, validationDetail, "Url", thisLabel, otherLabel);
 
             int cmp = Version.CompareTo(other.Version);
             if (cmp < 0)
@@ -346,9 +351,6 @@ namespace CodeBit
                 validationDetail.AppendLine($"Warning: {thisLabel} DatePublished ({DatePublishedStr}) doesn't match {otherLabel} ({other.DatePublishedStr}).");
                 validationLevel |= ValidationLevel.FailRecommended;
             }
-
-            // URL doesn't necessarily have to match depending on whether the codebit is the latest one. So, we use an optional comparison.
-            CompareOptionalStrings(Url, other.Url, ref validationLevel, validationDetail, "Url", thisLabel, otherLabel);
 
             CompareOptionalStrings(Author, other.Author, ref validationLevel, validationDetail, "Author", thisLabel, otherLabel);
             CompareOptionalStrings(Description, other.Description, ref validationLevel, validationDetail, "Description", thisLabel, otherLabel);

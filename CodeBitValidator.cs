@@ -27,7 +27,7 @@ namespace CodeBit
             if (pubMetadata is not null && pubValidationLevel <= ValidationLevel.FailRecommended)
             {
                 Console.WriteLine("Comparing File with Published Copy...");
-                CompareAndReport(fileMetadata, pubMetadata, "File", "Published");
+                CompareAndReport(fileMetadata, pubMetadata, "File", "Published", true);
             }
 
             CompareWithDirectoryAndReport(fileMetadata, "File");
@@ -67,6 +67,7 @@ namespace CodeBit
             }
 
             (var pubValidationLevel, var pubMetadata) = ValidateAndReport(dirMetadata.Url, "Published Copy");
+            if (pubMetadata is null) return;
 
             Console.Write(pubMetadata.ToString());
             Console.WriteLine();
@@ -216,9 +217,9 @@ namespace CodeBit
             return validationLevel;
         }
 
-        private static ValidationLevel CompareAndReport(CodeBitMetadata a, CodeBitMetadata b, string aLabel, string bLabel)
+        private static ValidationLevel CompareAndReport(CodeBitMetadata a, CodeBitMetadata b, string aLabel, string bLabel, bool expectUrlMatch = false)
         {
-            (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = a.CompareTo(b, aLabel, bLabel);
+            (ValidationLevel cmpValidationLevel, string cmpValidationDetail) = a.CompareTo(b, aLabel, bLabel, expectUrlMatch);
 
             if (cmpValidationLevel == ValidationLevel.Pass)
             {
