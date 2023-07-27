@@ -324,8 +324,6 @@ namespace CodeBit
                 validationLevel |= ValidationLevel.FailMandatory;
             }
 
-            CompareRequiredStrings(Url, other.Url, ref validationLevel, validationDetail, "Url", thisLabel, otherLabel);
-
             foreach(var keyword in Keywords)
             {
                 if (!other.Keywords.Contains(keyword))
@@ -343,11 +341,14 @@ namespace CodeBit
                 }
             }
 
-             if (Math.Abs(DatePublished.UtcTicks - other.DatePublished.UtcTicks) > 10000) // More than one second difference
+            if (Math.Abs(DatePublished.UtcTicks - other.DatePublished.UtcTicks) > 10000) // More than one second difference
             {
                 validationDetail.AppendLine($"Warning: {thisLabel} DatePublished ({DatePublishedStr}) doesn't match {otherLabel} ({other.DatePublishedStr}).");
                 validationLevel |= ValidationLevel.FailRecommended;
             }
+
+            // URL doesn't necessarily have to match depending on whether the codebit is the latest one. So, we use an optional comparison.
+            CompareOptionalStrings(Url, other.Url, ref validationLevel, validationDetail, "Url", thisLabel, otherLabel);
 
             CompareOptionalStrings(Author, other.Author, ref validationLevel, validationDetail, "Author", thisLabel, otherLabel);
             CompareOptionalStrings(Description, other.Description, ref validationLevel, validationDetail, "Description", thisLabel, otherLabel);
