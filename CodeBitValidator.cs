@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using Bredd;
@@ -42,6 +43,39 @@ namespace CodeBit
             if (fileValidationLevel > ValidationLevel.FailRecommended) return;
 
             CompareWithDirectoryAndReport(metadata, "Published Metadata");
+        }
+
+        public static void ValidateByName(string codebitName, SemVer? version = null)
+        {
+            if (version is null)
+            {
+                Console.WriteLine($"Validating CodeBit '{codebitName}'...");
+                version = SemVer.Max;
+            }
+            else
+            {
+                Console.WriteLine($"Validating CodeBit '{codebitName}' v{version}...");
+            }
+
+            var dirMetadata = FindInDirectoryOrReport(codebitName, version);
+            if (dirMetadata is null) return;
+
+            if (string.IsNullOrWhiteSpace(dirMetadata.Url))
+            {
+                Console.WriteLine("Invalid directory entry. No URL specified.");
+                return;
+            }
+
+            (var pubValidationLevel, var pubMetadata) = ValidateAndReport(dirMetadata.Url, "Published Copy");
+
+            Console.Write(pubMetadata.ToString());
+            Console.WriteLine();
+            if (pubValidationLevel > ValidationLevel.FailRecommended) return;
+
+            Console.WriteLine("Comparing with directory entry...");
+            CompareAndReport(pubMetadata, dirMetadata, "Published", "Directory");
+
+            if (pubMetadata is null || pubValidationLevel > ValidationLevel.FailRecommended) return;
         }
 
         public static void ValidateDirectory(string domainName)
@@ -208,43 +242,8 @@ namespace CodeBit
         {
             Console.WriteLine($"Validating directory entry for '{a.Name}' v{a.Version}...");
 
-            string domainName = MetadataLoader.GetCodebitDomainName(a.Name);
-            var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
-            if (dirUrl is null)
-            {
-                Console.WriteLine($"No DNS directory entry for domain '{domainName}'.");
-                Console.WriteLine();
-                return;
-            }
-            var reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
-            if (reader == null)
-            {
-                Console.WriteLine($"Unable to read directory for domain '{domainName} from URL '{dirUrl}'.");
-                Console.WriteLine();
-                return;
-            }
-
-            CodeBitMetadata? dirMetadata = null;
-            SemVer bestMatch = SemVer.Zero;
-            for (; ; )
-            {
-                var candidate = reader.ReadCodeBit();
-                if (candidate is null) break;
-                if (string.Equals(candidate.Name, a.Name, StringComparison.Ordinal)
-                    && candidate.Version.CompareTo(bestMatch) > 0
-                    && candidate.Version.CompareTo(a.Version) <= 0)
-                {
-                    dirMetadata = candidate;
-                    bestMatch = candidate.Version;
-                }
-            }
-            
-            if (dirMetadata is null)
-            {
-                Console.WriteLine($"Codebit '{a.Name}' v{a.Version} is not listed in the directory.");
-                Console.WriteLine();
-                return;
-            }
+            var dirMetadata = FindInDirectoryOrReport(a.Name, a.Version);
+            if (dirMetadata is null) return;
 
             var validationLevel = ValidateAndReport(dirMetadata);
             if (validationLevel > ValidationLevel.FailRecommended) return;
@@ -253,7 +252,47 @@ namespace CodeBit
             CompareAndReport(a, dirMetadata, aLabel, "Directory");
         }
 
-    }
+        static CodeBitMetadata? FindInDirectoryOrReport(string codeBitName, SemVer version)
+        {
+            string domainName = MetadataLoader.GetCodebitDomainName(codeBitName);
+            var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
+            if (dirUrl is null)
+            {
+                Console.WriteLine($"No DNS directory entry for domain '{domainName}'.");
+                Console.WriteLine();
+                return null;
+            }
+            var reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
+            if (reader == null)
+            {
+                Console.WriteLine($"Unable to read directory for domain '{domainName} from URL '{dirUrl}'.");
+                Console.WriteLine();
+                return null;
+            }
+
+            CodeBitMetadata? dirMetadata = null;
+            for (; ; )
+            {
+                var candidate = reader.ReadCodeBit();
+                if (candidate is null) break;
+                if (string.Equals(candidate.Name, codeBitName, StringComparison.Ordinal)
+                    && (dirMetadata is null || candidate.Version.CompareTo(dirMetadata.Version) > 0)
+                    && candidate.Version.CompareTo(version) <= 0)
+                {
+                    dirMetadata = candidate;
+                }
+            }
+
+            if (dirMetadata is null)
+            {
+                Console.WriteLine($"Codebit '{codeBitName}' v{version} is not listed in the directory.");
+                Console.WriteLine();
+            }
+
+            return dirMetadata;
+        }
+
+    } // Class CodeBitValidator
 
     static class IndentedWrite
     {

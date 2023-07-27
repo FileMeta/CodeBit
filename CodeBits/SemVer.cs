@@ -244,12 +244,37 @@ namespace FileMeta
         /// <returns>The formatted semantic versioning value.</returns>
         public override string ToString()
         {
-            var value = $"{Major}.{Minor}.{Patch}";
+            var sb = new StringBuilder();
+            sb.Append(Major);
+            if (Minor < int.MaxValue)
+            {
+                sb.Append('.');
+                sb.Append(Minor);
+            }
+            else
+            {
+                return sb.ToString();
+            }
+            if (Patch < int.MaxValue)
+            {
+                sb.Append('.');
+                sb.Append(Patch);
+            }
+            else
+            {
+                return sb.ToString();
+            }
             if (!string.IsNullOrEmpty(Prerelease))
-                value = string.Concat(value, "-", Prerelease);
+            {
+                sb.Append('-');
+                sb.Append(Prerelease);
+            }
             if (!string.IsNullOrEmpty(Build))
-                value = string.Concat(value, "+", Build);
-            return value;
+            {
+                sb.Append('+');
+                sb.Append(Build);
+            }
+            return sb.ToString();
         }
 
         /// <summary>
@@ -308,7 +333,8 @@ namespace FileMeta
             return (successLevel >= Tolerable);
         }
 
-        public static readonly SemVer Zero = new SemVer() { Major= 0, Minor = 0, Patch = 0, Prerelease = null, Build = null };
+        public static readonly SemVer Zero = new SemVer(0, 0, 0);
+        public static readonly SemVer Max = new SemVer(int.MaxValue, int.MaxValue, int.MaxValue);
 
         /// <summary>
         /// Return value from <see cref="TryParse(string)"/>. Indicates invalid format.

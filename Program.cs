@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.IO;
 using Bredd;
+using FileMeta;
 
 namespace CodeBit
 {
@@ -16,6 +17,12 @@ Actions:
   Validate <filename>
     Validate the codebit metadata in the designated file.
 
+  ValidateByUrl <url>
+    Validate a codebit at the specified URL.
+
+  ValidateByName <codeBitName> [-v <version>]
+    Look up in a directory by name and validate.
+
   ValidateDirectory <domainName>
     Validate the published directory for a particular domain name.
 
@@ -25,6 +32,7 @@ Actions:
 
         static Action? s_operation;
         static string s_target = string.Empty;
+        static SemVer? s_version = null;
 
         static void Main(string[] args)
         {
@@ -50,6 +58,11 @@ Actions:
             {
                 case "validate":
                     s_operation = Validate;
+                    getTarget = true;
+                    break;
+
+                case "validatebyname":
+                    s_operation = ValidateByName;
                     getTarget = true;
                     break;
 
@@ -100,6 +113,11 @@ Actions:
                 cl.ThrowIfNotOption();
                 switch (cl.Current.ToLowerInvariant())
                 {
+                    case "-v":
+                    case "-version":
+                        s_version = SemVer.ParseForSearch(cl.ReadNextValue());
+                        break;
+
                     default:
                         cl.ThrowUnexpectedArgError();
                         break;
@@ -113,6 +131,11 @@ Actions:
                 CodeBitValidator.ValidatePublishedCodebit(s_target);
             else
                 CodeBitValidator.ValidateFile(s_target);
+        }
+
+        static void ValidateByName()
+        {
+            CodeBitValidator.ValidateByName(s_target, s_version);
         }
 
         static void ValidateDirectory()
