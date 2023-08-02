@@ -4,20 +4,10 @@
       "commandName": "WSL2",
       "distributionName": ""
     },
-    "Sample Directory": {
-      "commandName": "Project",
-      "commandLineArgs": "ValidateDirectory sample.FileMeta.org",
-      "workingDirectory": ".\\CodeBits"
-    },
     "Validate VideoFeedback.html": {
       "commandName": "Project",
       "commandLineArgs": "Validate VideoFeedback.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
-    },
-    "Bad Directory": {
-      "commandName": "Project",
-      "commandLineArgs": "ValidateDirectory bad.FileMeta.org",
-      "workingDirectory": ".\\CodeBits"
     },
     "Validate FileNotFound": {
       "commandName": "Project",
@@ -26,28 +16,38 @@
     },
     "Validate URL 404": {
       "commandName": "Project",
-      "commandLineArgs": "ValidateByUrl https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/NotPresent404.html",
+      "commandLineArgs": "Validate -url https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/NotPresent404.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     },
     "Validate URL Bad Domain": {
       "commandName": "Project",
-      "commandLineArgs": "ValidateByUrl https://invalid.sample.com/Pred/something.html",
+      "commandLineArgs": "Validate -url https://invalid.example.com/Phred/something.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     },
     "Validate URL": {
       "commandName": "Project",
-      "commandLineArgs": "ValidateByUrl https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/VideoFeedback.html",
+      "commandLineArgs": "Validate -url https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/VideoFeedback.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     },
     "Validate by Name": {
       "commandName": "Project",
-      "commandLineArgs": "ValidateByName sample.FileMeta.org/VideoFeedback.html",
+      "commandLineArgs": "Validate -name sample.FileMeta.org/VideoFeedback.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     },
     "Validate by Name-Version": {
       "commandName": "Project",
-      "commandLineArgs": "ValidateByName sample.FileMeta.org/VideoFeedback.html -v 0.0.0",
+      "commandLineArgs": "Validate -name sample.FileMeta.org/VideoFeedback.html -v 0.0.0",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "Validate Sample Directory": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate -dir sample.FileMeta.org",
+      "workingDirectory": ".\\CodeBits"
+    },
+    "Validate Bad Directory": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate -dir bad.FileMeta.org",
+      "workingDirectory": ".\\CodeBits"
     }
   }
 }
