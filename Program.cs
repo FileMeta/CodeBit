@@ -16,6 +16,7 @@ namespace CodeBit
 Actions:
   Validate [-file] <filename>
     Validate the codebit metadata in the designated file.
+    '-file' argument prefix is optional as it defaults to expecting a filename.
 
   Validate -url <url>
     Validate a codebit at the specified URL.
@@ -25,6 +26,10 @@ Actions:
 
   Validate -dir <domainName>
     Validate the published directory for a particular domain name.
+
+  ToJson [-file] <filename>
+    Convert the codebit metadata to JSON suitable for adding to a directory.
+    '-file' argument prefix is optional as it defaults to expecting a filename.
 
   GetVersion
     Report the version of this codebit tool.
@@ -60,6 +65,11 @@ Actions:
             {
                 case "validate":
                     s_operation = Validate;
+                    defaultTargetType = TargetType.Filename;
+                    break;
+
+                case "tojson":
+                    s_operation = ToJson;
                     defaultTargetType = TargetType.Filename;
                     break;
 
@@ -163,6 +173,27 @@ Actions:
                     Console.Error.WriteLine("No target specified for Validate command.");
                     break;
             }
+        }
+
+        static void ToJson()
+        {
+            if (s_targetType == TargetType.Unknown || string.IsNullOrWhiteSpace(s_target))
+            {
+                Console.Error.WriteLine("No target specified for ToJson command.");
+                return;
+            }
+            if (s_targetType == TargetType.DirectoryDomain)
+            {
+                Console.Error.WriteLine("Directory to JSON not (yet) supported.");
+                return;
+            }
+            CodeBitMetadata? metadata = MetadataLoader.Read(s_target, s_targetType, s_version);
+            if (metadata == null)
+            {
+                Console.Error.WriteLine($"Target '{s_target}' not found.");
+                return;
+            }
+            CodebitJsonWriter.Write(metadata, Console.OpenStandardOutput());
         }
 
         static void GetSyntax()

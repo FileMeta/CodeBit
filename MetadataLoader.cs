@@ -1,4 +1,5 @@
 ﻿using Bredd;
+using FileMeta;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -57,11 +58,22 @@ namespace CodeBit
             return urlOrFilename.StartsWith("http://") || urlOrFilename.StartsWith("https://");
         }
 
-        public static CodeBitMetadata? Read(string urlOrFilename)
+        public static CodeBitMetadata? Read(string urlOrFilename, TargetType targetType, SemVer? version = null)
         {
-            return (IsHttpUrl(urlOrFilename))
-                ? ReadCodeBitFromUrl(urlOrFilename)
-                : ReadCodeBitFromFile(urlOrFilename);
+            switch (targetType)
+            {
+                case TargetType.Filename:
+                    return ReadCodeBitFromFile(urlOrFilename);
+
+                case TargetType.CodebitUrl:
+                    return ReadCodeBitFromUrl(urlOrFilename);
+
+                case TargetType.CodebitName:
+                    throw new NotImplementedException();
+
+                default:
+                    throw new ArgumentException($"Unexpected value '{targetType}'.", nameof(targetType));
+            }
         }
 
         public static string GetCodebitDomainName(string codebitName)

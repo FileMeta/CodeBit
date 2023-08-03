@@ -195,6 +195,16 @@ namespace CodeBit
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Indicates whether the key name is among the standard attributes
+        /// </summary>
+        /// <param name="key">Name of the key to test</param>
+        /// <returns>True if the key addresses a standards attribute (e.g. 'name').</returns>
+        public static bool IsStandardAttributeKey(string key)
+        {
+            return s_standardKeys.Contains(key);
+        }
+
         // Regular expression snippet for a domain name
         const string c_rxDomainName = @"(?:[A-Za-z0-9-_]+)(?:\.[A-Za-z0-9-_]+)+";
 

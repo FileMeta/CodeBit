@@ -48,6 +48,11 @@
       "commandName": "Project",
       "commandLineArgs": "Validate -dir bad.FileMeta.org",
       "workingDirectory": ".\\CodeBits"
+    },
+    "ToJson VideoFeedback.html": {
+      "commandName": "Project",
+      "commandLineArgs": "ToJson VideoFeedback.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     }
   }
 }
