@@ -58,24 +58,49 @@ namespace CodeBit
             return urlOrFilename.StartsWith("http://") || urlOrFilename.StartsWith("https://");
         }
 
-        public static CodeBitMetadata? Read(string target, TargetType targetType, SemVer? version = null)
+        /// <summary>
+        /// Read CodeBit Metadata from multiple sources
+        /// </summary>
+        /// <param name="target">The target to be read</param>
+        /// <param name="targetType">Target type (filename, url, name (in directory)</param>
+        /// <param name="version">Version (only relevant for <see cref="TargetType.CodebitName"/></param>
+        /// <returns>Codebit Metadata.</returns>
+        /// <exception cref="ArgumentException">Target type is not Filename, CodebitUrl, or CodebitName</exception>
+        /// <exception cref="ApplicationException">Target was not found.</exception>
+        public static CodeBitMetadata Read(string target, TargetType targetType, SemVer? version = null)
         {
             switch (targetType)
             {
                 case TargetType.Filename:
-                    return ReadCodeBitFromFile(target);
+                    {
+                        var metadata = ReadCodeBitFromFile(target);
+                        if (metadata is null) throw new ApplicationException($"Codebit file '{target}' not found.");
+                        return metadata;
+                    }
 
                 case TargetType.CodebitUrl:
-                    return ReadCodeBitFromUrl(target);
+                    {
+                        var metadata = ReadCodeBitFromUrl(target);
+                        if (metadata is null) throw new ApplicationException($"Codebit at URL '{target}' not found.");
+                        return metadata;
+                    }
 
                 case TargetType.CodebitName:
                     {
-                        var dirUrl = GetDirectoryUrl(MetadataLoader.GetCodebitDomainName(target));
-                        if (dirUrl is null) return null;
+                        var domainName = MetadataLoader.GetCodebitDomainName(target);
+                        var dirUrl = GetDirectoryUrl(domainName);
+                        if (dirUrl is null) throw new ApplicationException($"Domain '{domainName}' does not have a directory.");
                         var reader = GetDirectoryFromUrl(dirUrl);
-                        if (reader == null) return null;
-                        return reader.Find(target, version ?? SemVer.Max);
+                        if (reader == null) throw new ApplicationException($"Unable to read directory for '{domainName}' from URL '{dirUrl}'.");
+                        var metadata = reader.Find(target, version ?? SemVer.Max);
+                        if (metadata is null) throw new ApplicationException((version is null)
+                            ? $"Unable to find a directory entry for '{target}'."
+                            : $"Unable to find a directory entry for '{target}' version '{version}'.");
+                        return metadata;
                     }
+
+                case TargetType.DirectoryDomain:
+                    throw new ArgumentException($"Cannot specify a directory domain for this operation.");
 
                 default:
                     throw new ArgumentException($"Unexpected value '{targetType}'.", nameof(targetType));
