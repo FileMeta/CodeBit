@@ -195,14 +195,44 @@ namespace CodeBit
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Indicates whether the key name is among the standard attributes
-        /// </summary>
-        /// <param name="key">Name of the key to test</param>
-        /// <returns>True if the key addresses a standards attribute (e.g. 'name').</returns>
-        public static bool IsStandardAttributeKey(string key)
+        public void ToJson(TextWriter textWriter)
         {
-            return s_standardKeys.Contains(key);
+            using (var writer = new SimpleJsonWriter(textWriter, true))
+            {
+                writer.WriteDocumentObjectBegin();
+                writer.WriteObjectProperty("@type", AtType);
+                writer.WriteObjectProperty("name", Name);
+                writer.WriteObjectProperty("description", Description);
+                writer.WriteObjectProperty("url", Url);
+                writer.WriteObjectProperty("version", Version.ToString());
+
+                if (Keywords.Count == 1)
+                {
+                    writer.WriteObjectOptionalProperty("keywords", Keywords[0]);
+                }
+                else if (Keywords.Count > 1)
+                {
+                    writer.WriteObjectArrayBegin("keywords");
+                    foreach(var keyword in Keywords)
+                    {
+                        writer.WriteArrayStringValue(keyword);
+                    }
+                    writer.WriteArrayEnd();
+                }
+
+                writer.WriteObjectOptionalProperty("datePublished", DatePublishedStr);
+                writer.WriteObjectOptionalProperty("author", Author);
+                writer.WriteObjectOptionalProperty("license", License);
+                foreach (var pair in this)
+                {
+                    if (s_standardKeys.Contains(pair.Key)) continue;
+                    foreach (var value in pair.Value)
+                    {
+                        writer.WriteObjectOptionalProperty(pair.Key, value);
+                    }
+                }
+                writer.WriteObjectEnd();
+            }
         }
 
         // Regular expression snippet for a domain name

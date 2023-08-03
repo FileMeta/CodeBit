@@ -53,6 +53,11 @@
       "commandName": "Project",
       "commandLineArgs": "ToJson VideoFeedback.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "ToJson URL": {
+      "commandName": "Project",
+      "commandLineArgs": "ToJson -url https://raw.githubusercontent.com/FileMeta/filemeta.github.io/70d5711399bbcc408fc873f22064b6583721eedd/samples/VideoFeedback.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     }
   }
 }

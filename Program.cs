@@ -193,7 +193,7 @@ Actions:
                 Console.Error.WriteLine($"Target '{s_target}' not found.");
                 return;
             }
-            CodebitJsonWriter.Write(metadata, Console.OpenStandardOutput());
+            metadata.ToJson(Console.Out);
         }
 
         static void GetSyntax()
