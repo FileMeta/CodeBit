@@ -263,41 +263,30 @@ namespace CodeBit
             CompareAndReport(a, dirMetadata, aLabel, "Directory");
         }
 
-        static CodeBitMetadata? FindInDirectoryOrReport(string codeBitName, SemVer version)
+        static public CodeBitMetadata? FindInDirectoryOrReport(string codeBitName, SemVer version)
         {
             string domainName = MetadataLoader.GetCodebitDomainName(codeBitName);
             var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
             if (dirUrl is null)
             {
-                Console.WriteLine($"No DNS directory entry for domain '{domainName}'.");
-                Console.WriteLine();
+                Console.Error.WriteLine($"No DNS directory entry for domain '{domainName}'.");
+                Console.Error.WriteLine();
                 return null;
             }
             var reader = MetadataLoader.GetDirectoryFromUrl(dirUrl);
             if (reader == null)
             {
-                Console.WriteLine($"Unable to read directory for domain '{domainName} from URL '{dirUrl}'.");
-                Console.WriteLine();
+                Console.Error.WriteLine($"Unable to read directory for domain '{domainName} from URL '{dirUrl}'.");
+                Console.Error.WriteLine();
                 return null;
             }
 
-            CodeBitMetadata? dirMetadata = null;
-            for (; ; )
-            {
-                var candidate = reader.ReadCodeBit();
-                if (candidate is null) break;
-                if (string.Equals(candidate.Name, codeBitName, StringComparison.Ordinal)
-                    && (dirMetadata is null || candidate.Version.CompareTo(dirMetadata.Version) > 0)
-                    && candidate.Version.CompareTo(version) <= 0)
-                {
-                    dirMetadata = candidate;
-                }
-            }
+            var dirMetadata = reader.Find(codeBitName, version);
 
             if (dirMetadata is null)
             {
-                Console.WriteLine($"Codebit '{codeBitName}' v{version} is not listed in the directory.");
-                Console.WriteLine();
+                Console.Error.WriteLine($"Codebit '{codeBitName}' v{version} is not listed in the directory.");
+                Console.Error.WriteLine();
             }
 
             return dirMetadata;

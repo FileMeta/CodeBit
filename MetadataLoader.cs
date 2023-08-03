@@ -58,18 +58,24 @@ namespace CodeBit
             return urlOrFilename.StartsWith("http://") || urlOrFilename.StartsWith("https://");
         }
 
-        public static CodeBitMetadata? Read(string urlOrFilename, TargetType targetType, SemVer? version = null)
+        public static CodeBitMetadata? Read(string target, TargetType targetType, SemVer? version = null)
         {
             switch (targetType)
             {
                 case TargetType.Filename:
-                    return ReadCodeBitFromFile(urlOrFilename);
+                    return ReadCodeBitFromFile(target);
 
                 case TargetType.CodebitUrl:
-                    return ReadCodeBitFromUrl(urlOrFilename);
+                    return ReadCodeBitFromUrl(target);
 
                 case TargetType.CodebitName:
-                    throw new NotImplementedException();
+                    {
+                        var dirUrl = GetDirectoryUrl(MetadataLoader.GetCodebitDomainName(target));
+                        if (dirUrl is null) return null;
+                        var reader = GetDirectoryFromUrl(dirUrl);
+                        if (reader == null) return null;
+                        return reader.Find(target, version ?? SemVer.Max);
+                    }
 
                 default:
                     throw new ArgumentException($"Unexpected value '{targetType}'.", nameof(targetType));

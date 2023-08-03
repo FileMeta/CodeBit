@@ -182,11 +182,6 @@ Actions:
                 Console.Error.WriteLine("No target specified for ToJson command.");
                 return;
             }
-            if (s_targetType == TargetType.DirectoryDomain)
-            {
-                Console.Error.WriteLine("Directory to JSON not (yet) supported.");
-                return;
-            }
             CodeBitMetadata? metadata = MetadataLoader.Read(s_target, s_targetType, s_version);
             if (metadata == null)
             {

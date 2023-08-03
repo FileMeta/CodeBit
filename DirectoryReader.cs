@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.PortableExecutable;
 
 namespace CodeBit
 {
@@ -182,6 +183,37 @@ namespace CodeBit
                 }
             }
             return codeBit;
+        }
+
+        /// <summary>
+        /// Finds CodeBit metadata in the directory with the same name and the closest version match.
+        /// </summary>
+        /// <param name="codebitName">Name of the CodeBit to find.</param>
+        /// <param name="version">Version</param>
+        /// <returns>Best match or null</returns>
+        /// <remarks>
+        /// <para>The best match is a codebit with the greatest version value (according to
+        /// Semantic Version comparisons) that is less than or equal to the specified version.
+        /// </para>
+        /// <para>Makes one pass through the metadata using repeated calls to <see cref="ReadCodeBit"/>
+        /// Therefore, this cannot be called repeatedly nor can it be mixed with calls to
+        /// ReadCodeBit().</para>
+        /// </remarks>
+        public CodeBitMetadata? Find(string codebitName, SemVer version)
+        {
+            CodeBitMetadata? dirMetadata = null;
+            for (; ; )
+            {
+                var candidate = ReadCodeBit();
+                if (candidate is null) break;
+                if (string.Equals(candidate.Name, codebitName, StringComparison.Ordinal)
+                    && (dirMetadata is null || candidate.Version.CompareTo(dirMetadata.Version) > 0)
+                    && candidate.Version.CompareTo(version) <= 0)
+                {
+                    dirMetadata = candidate;
+                }
+            }
+            return dirMetadata;
         }
 
         void JsonRead()
