@@ -82,7 +82,7 @@ namespace CodeBit
 
         public void WriteArrayStringValue(string value)
         {
-            WriteIndent();
+            if (m_lineHasContent) m_textWriter.Write(", ");
             WriteQuotedEncoded(value);
             m_lineHasContent = true;
         }
@@ -101,7 +101,10 @@ namespace CodeBit
 
         public void WriteArrayEnd()
         {
-            FinishElement(']');
+            if (m_level == 0) throw new InvalidOperationException("Unbalanced begin and end.");
+            --m_level;
+            m_textWriter.Write(']');
+            m_lineHasContent = true;
         }
 
         public void Dispose()
