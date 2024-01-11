@@ -5,6 +5,12 @@ using System.IO;
 using Bredd;
 using FileMeta;
 
+/* Feature Backlog
+* ToJson calculates the SHA-256 hash as part of its operation
+* Validation checks hashes
+* Get, with hash check
+*/
+
 namespace CodeBit
 {
     internal class Program
@@ -25,7 +31,7 @@ Actions:
     Look up in a directory by name and validate.
 
   Validate -dir <domainName>
-    Validate the published directory for a particular domain name.
+    Validate the a published directory.
 
   ToJson [-file] <filename>
     Convert the codebit metadata to JSON suitable for adding to a directory.
