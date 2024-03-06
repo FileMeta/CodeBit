@@ -22,7 +22,7 @@ namespace CodeBit
 Actions:
   Validate [-file] <filename>
     Validate the codebit metadata in the designated file.
-    '-file' argument prefix is optional as it defaults to expecting a filename.
+    The '-file' argument prefix is optional as it expects a filename.
 
   Validate -url <url>
     Validate a codebit at the specified URL.
@@ -35,7 +35,7 @@ Actions:
 
   ToJson [-file] <filename>
     Convert the codebit metadata to JSON suitable for adding to a directory.
-    '-file' argument prefix is optional as it defaults to expecting a filename.
+    The '-file' argument prefix is optional as it expects a filename.
 
   GetVersion
     Report the version of this codebit tool.
@@ -81,6 +81,10 @@ Actions:
 
                 case "getversion":
                     s_operation = GetVersion;
+                    break;
+
+                case "test":
+                    s_operation = Test;
                     break;
 
                 case null:
@@ -194,6 +198,7 @@ Actions:
                 Console.Error.WriteLine($"Target '{s_target}' not found.");
                 return;
             }
+
             metadata.ToJson(Console.Out);
         }
 
@@ -205,6 +210,14 @@ Actions:
         static void GetVersion()
         {
             Console.WriteLine(new FileMeta.AssemblyMetadata(typeof(Program)).Summary);
+        }
+
+        static void Test() {
+            using (var instr = new LineEndFilterStream(File.OpenRead(@"C:\Users\brand\Source\FileMeta\CodeBit\CodeBits\CommandLineLexer.cs"))) {
+                using (var outstr = File.Create(@"C:\Users\brand\downloads\CommandLineLexer.cs")) {
+                    instr.CopyTo(outstr);
+                }
+            }
         }
     } // Class Program
 

@@ -48,6 +48,7 @@ namespace CodeBit
         const string key_author = "author";
         const string key_description = "description";
         const string key_license = "license";
+        const string key_hash = "hash";
         const string key_atType = "@type";
         const string key_underType = "_type";
         const string val_keyword_codebit = "CodeBit";
@@ -146,6 +147,22 @@ namespace CodeBit
         /// License URL of the CodeBit (optional, may be null)
         /// </summary>
         public string License { get => GetValue(key_license) ?? string.Empty; set => SetValue(key_license, value); }
+
+        /// <summary>
+        /// An SHA256 hash of the source file
+        /// </summary>
+        /// <remarks>
+        /// <para>When calculating the hash. Windows line endings of "\r\n" are normalized
+        /// to UNIX-style "\n". This transformation is done regardless of whether the file
+        /// is actually a text file. So, if a binary file happens to have a "\r\n" sequence
+        /// it will be changed to "\n" while calculating the hash.
+        /// </para>
+        /// <para>The hash value should have a prefix of "SHA256:" followed by 32 hexadecimal
+        /// digits representing the hash. Future implementations may support other hash
+        /// algorithms.
+        /// </para>
+        /// </remarks>
+        public string Hash { get => GetValue(key_hash) ?? string.Empty; set => SetValue(key_hash, value); }
 
         /// <summary>
         /// Filename from which the metadata was read. Used only for validation.
