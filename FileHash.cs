@@ -26,7 +26,7 @@ namespace CodeBit {
 
     class LineEndFilterStream : Stream {
 
-        const int c_bufSize = 2;
+        const int c_bufSize = 4096;
         Stream m_internalStream;
         byte[] m_buffer = new byte[c_bufSize];
         int m_bufPos = 0;
@@ -74,7 +74,6 @@ namespace CodeBit {
             else {
                 m_bufPos = m_bufEnd = 0;
             }
-            Console.WriteLine($"{c_bufSize - m_bufEnd}");
             int bytesRead = m_internalStream.Read(m_buffer, m_bufEnd, c_bufSize - m_bufEnd);
             m_bufEnd += bytesRead;
         }
