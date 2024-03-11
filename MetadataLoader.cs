@@ -11,6 +11,33 @@ namespace CodeBit
 {
     internal static class MetadataLoader
     {
+        public static CodeBitMetadata ReadCodeBitFromStream(Stream stream) {
+            Stream? tempStream = null;
+            try {
+                // If you cannot seek on the stream, copy it into a temporary stream
+                Stream srcStream = stream;
+                if (!stream.CanSeek) {
+                    tempStream = File.Create(Path.GetTempFileName(), 4096, FileOptions.DeleteOnClose);
+                    stream.CopyTo(tempStream);
+                    tempStream.Position = 0;
+                    srcStream = tempStream;
+                }
+
+                CodeBitMetadata metadata;
+                using (var reader = new StreamReader(srcStream, Encoding.UTF8, true, -1, true)) {
+                    metadata = CodeBitMetadata.Read(reader);
+                }
+                srcStream.Position = 0;
+                metadata.Hash = FileHash.GetHashNormEol(srcStream);
+                return metadata;
+            }
+            finally {
+                tempStream?.Dispose();
+            }
+        }
+
+
+
         /// <summary>
         /// Load CodeBit Metadata from a file
         /// </summary>
@@ -20,9 +47,9 @@ namespace CodeBit
         {
             try
             {
-                using (var reader = new StreamReader(filename, Encoding.UTF8, true))
+                using (var stream = File.OpenRead(filename))
                 {
-                    var metadata = CodeBitMetadata.Read(reader);
+                    var metadata = ReadCodeBitFromStream(stream);
                     metadata.FilenameForValidation = filename;
                     return metadata;
                 }
@@ -37,9 +64,8 @@ namespace CodeBit
         {
             try
             {
-                using (var reader = new StreamReader(Http.Get(url), Encoding.UTF8, true, 512, false))
-                {
-                    return CodeBitMetadata.Read(reader);
+                using (var stream = Http.Get(url)) {
+                    return ReadCodeBitFromStream(stream);
                 }
             }
             catch (HttpRequestException err)

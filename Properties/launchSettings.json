@@ -54,11 +54,6 @@
       "commandLineArgs": "ToJson VideoFeedback.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     },
-    "ToJson URL": {
-      "commandName": "Project",
-      "commandLineArgs": "ToJson -url https://raw.githubusercontent.com/FileMeta/filemeta.github.io/70d5711399bbcc408fc873f22064b6583721eedd/samples/VideoFeedback.html",
-      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
-    },
     "ToJason by Name-Version": {
       "commandName": "Project",
       "commandLineArgs": "ToJson -name sample.FileMeta.org/VideoFeedback.html -v 0.0.0-alpha",
@@ -68,6 +63,16 @@
       "commandName": "Project",
       "commandLineArgs": "Test",
       "remoteDebugEnabled": true
+    },
+    "ToJson URL Alpha": {
+      "commandName": "Project",
+      "commandLineArgs": "ToJson -url https://raw.githubusercontent.com/FileMeta/filemeta.github.io/70d5711399bbcc408fc873f22064b6583721eedd/samples/VideoFeedback.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "ToJson URL Current": {
+      "commandName": "Project",
+      "commandLineArgs": "ToJson -url https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/VideoFeedback.html",
+      "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
     }
   }
 }

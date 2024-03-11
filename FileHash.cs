@@ -17,10 +17,10 @@ namespace CodeBit {
         /// <param name="stream"></param>
         /// <returns></returns>
         public static string GetHashNormEol(Stream stream) {
-            using (SHA256 sha256 = SHA256.Create()) {
-                byte[] hash = sha256.ComputeHash(stream);
-                return c_prefixSHA256 + Convert.ToHexString(hash);
-            }
+            using var fs = new LineEndFilterStream(stream, false);
+            using var sha256 = SHA256.Create();
+            var hash = sha256.ComputeHash(fs);
+            return c_prefixSHA256 + Convert.ToHexString(hash);
         }
     }
 
