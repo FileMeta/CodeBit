@@ -65,7 +65,8 @@ namespace CodeBit
             key_datePublished,
             key_author,
             key_description,
-            key_license
+            key_license,
+            key_hash
         };
 
         /// <summary>
@@ -198,6 +199,7 @@ namespace CodeBit
             if (!string.IsNullOrEmpty(Description)) sb.AppendLine("description: " + Description);
             if (!string.IsNullOrEmpty(License)) sb.AppendLine("license: " + License);
             if (Keywords.Count > 0) sb.AppendLine("keywords: " + String.Join("; ", Keywords));
+            if (!string.IsNullOrEmpty(Hash)) sb.AppendLine("hash: " + Hash);
             foreach (var pair in this)
             {
                 if (s_standardKeys.Contains(pair.Key)) continue;
@@ -240,6 +242,7 @@ namespace CodeBit
                 writer.WriteObjectOptionalProperty("datePublished", DatePublishedStr);
                 writer.WriteObjectOptionalProperty("author", Author);
                 writer.WriteObjectOptionalProperty("license", License);
+                writer.WriteObjectOptionalProperty("hash", Hash);
                 foreach (var pair in this)
                 {
                     if (s_standardKeys.Contains(pair.Key)) continue;
@@ -367,22 +370,22 @@ namespace CodeBit
             var validationLevel = ValidationLevel.Pass;
             var validationDetail = new StringBuilder();
 
-            CompareRequiredStrings(AtType, other.AtType, ref validationLevel, validationDetail, "@Type", thisLabel, otherLabel);
-            CompareRequiredStrings(Name, other.Name, ref validationLevel, validationDetail, "Name", thisLabel, otherLabel);
+            CompareRequiredStrings(AtType, other.AtType, ref validationLevel, validationDetail, key_atType, thisLabel, otherLabel);
+            CompareRequiredStrings(Name, other.Name, ref validationLevel, validationDetail, key_name, thisLabel, otherLabel);
 
             // URL doesn't necessarily have to match depending on whether the codebit is the latest one.
             if (expectUrlMatch)
-                CompareRequiredStrings(Url, other.Url, ref validationLevel, validationDetail, "Url", thisLabel, otherLabel);
+                CompareRequiredStrings(Url, other.Url, ref validationLevel, validationDetail, key_url, thisLabel, otherLabel);
 
             int cmp = Version.CompareTo(other.Version);
             if (cmp < 0)
             {
-                validationDetail.AppendLine($"Error: {thisLabel} Version ({Version}) is older than {otherLabel} ({other.Version}).");
+                validationDetail.AppendLine($"Error: {thisLabel} 'version' ({Version}) is older than {otherLabel} ({other.Version}).");
                 validationLevel |= ValidationLevel.FailMandatory;
             }
             if (cmp > 0)
             {
-                validationDetail.AppendLine($"Error: {thisLabel} Version ({Version}) is newer than {otherLabel} ({other.Version}).");
+                validationDetail.AppendLine($"Error: {thisLabel} 'version' ({Version}) is newer than {otherLabel} ({other.Version}).");
                 validationLevel |= ValidationLevel.FailMandatory;
             }
 
@@ -390,7 +393,7 @@ namespace CodeBit
             {
                 if (!other.Keywords.Contains(keyword))
                 {
-                    validationDetail.AppendLine($"Warning: {thisLabel} Keywords includes '{keyword}' which {otherLabel} does not include.");
+                    validationDetail.AppendLine($"Warning: {thisLabel} 'keywords' includes '{keyword}' which {otherLabel} does not include.");
                     validationLevel |= ValidationLevel.FailRecommended;
                 }
             }
@@ -398,20 +401,22 @@ namespace CodeBit
             {
                 if (!Keywords.Contains(keyword))
                 {
-                    validationDetail.AppendLine($"Warning: {otherLabel} Keywords includes '{keyword}' which {thisLabel} does not include.");
+                    validationDetail.AppendLine($"Warning: {otherLabel} 'keywords' includes '{keyword}' which {thisLabel} does not include.");
                     validationLevel |= ValidationLevel.FailRecommended;
                 }
             }
 
             if (Math.Abs(DatePublished.UtcTicks - other.DatePublished.UtcTicks) > 10000) // More than one second difference
             {
-                validationDetail.AppendLine($"Warning: {thisLabel} DatePublished ({DatePublishedStr}) doesn't match {otherLabel} ({other.DatePublishedStr}).");
+                validationDetail.AppendLine($"Warning: {thisLabel} 'datePublished' ({DatePublishedStr}) doesn't match {otherLabel} ({other.DatePublishedStr}).");
                 validationLevel |= ValidationLevel.FailRecommended;
             }
 
-            CompareOptionalStrings(Author, other.Author, ref validationLevel, validationDetail, "Author", thisLabel, otherLabel);
-            CompareOptionalStrings(Description, other.Description, ref validationLevel, validationDetail, "Description", thisLabel, otherLabel);
-            CompareOptionalStrings(License, other.License, ref validationLevel, validationDetail, "License", thisLabel, otherLabel);
+            CompareRequiredStrings(Hash, other.Hash, ref validationLevel, validationDetail, key_hash, thisLabel, otherLabel);
+
+            CompareOptionalStrings(Author, other.Author, ref validationLevel, validationDetail, key_author, thisLabel, otherLabel);
+            CompareOptionalStrings(Description, other.Description, ref validationLevel, validationDetail, key_description, thisLabel, otherLabel);
+            CompareOptionalStrings(License, other.License, ref validationLevel, validationDetail, key_license, thisLabel, otherLabel);
 
             // Compare the rest
             foreach (var pair in this)
@@ -422,7 +427,7 @@ namespace CodeBit
                 var otherValue = other.GetValues(pair.Key);
                 if (otherValue is null)
                 {
-                    validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} contains value ({thisStr}) but {otherLabel} has no value.");
+                    validationDetail.AppendLine($"Warning: {thisLabel} '{pair.Key}' contains value ({thisStr}) but {otherLabel} '{pair.Key}' has no value.");
                     validationLevel |= ValidationLevel.FailRecommended;
                     continue;
                 }
@@ -435,7 +440,7 @@ namespace CodeBit
                 if (s_standardKeys.Contains(pair.Key)) continue;
                 if (pair.Value is null) continue;
                 if (ContainsKey(pair.Key)) continue;
-                validationDetail.AppendLine($"Warning: {thisLabel} {pair.Key} has no value but {otherLabel} includes value ({string.Join(';', pair.Value)}).");
+                validationDetail.AppendLine($"Warning: {thisLabel} '{pair.Key}' has no value but {otherLabel} includes '{pair.Key}' ({string.Join(';', pair.Value)}).");
                 validationLevel |= ValidationLevel.FailRecommended;
             }
 
@@ -446,7 +451,7 @@ namespace CodeBit
         {
             if (!string.Equals(thisStr, otherStr, strCmp))
             {
-                validationDetail.AppendLine($"Error: {thisLabel} {property} ({thisStr}) doesn't match {otherLabel} ({otherStr}).");
+                validationDetail.AppendLine($"Error: {thisLabel} '{property}' ({thisStr}) doesn't match {otherLabel} '{property}' ({otherStr}).");
                 validationLevel |= ValidationLevel.FailMandatory;
             }
         }
@@ -455,7 +460,7 @@ namespace CodeBit
         {
             if (!string.Equals(thisStr, otherStr, strCmp))
             {
-                validationDetail.AppendLine($"Warning: {thisLabel} {property} ({thisStr}) doesn't match {otherLabel} ({otherStr}).");
+                validationDetail.AppendLine($"Warning: {thisLabel} '{property}' ({thisStr}) doesn't match {otherLabel} '{property}' ({otherStr}).");
                 validationLevel |= ValidationLevel.FailRecommended;
             }
         }

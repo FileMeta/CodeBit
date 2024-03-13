@@ -107,7 +107,7 @@ namespace CodeBit
                 case TargetType.CodebitUrl:
                     {
                         var metadata = ReadCodeBitFromUrl(target);
-                        if (metadata is null) throw new ApplicationException($"Codebit at URL '{target}' not found.");
+                         if (metadata is null) throw new ApplicationException($"Codebit at URL '{target}' not found.");
                         return metadata;
                     }
 
