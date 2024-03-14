@@ -19,24 +19,38 @@ namespace CodeBit
             s_client.DefaultRequestHeaders.Accept.ParseAdd("*/*");
         }
 
-        public static Stream Get(string url)
+        /// <summary>
+        /// Retrieve a URL in the form of a stream. Upon errors throw an ApplicationException
+        /// with a user-friendly error message.
+        /// </summary>
+        /// <param name="url">The URL to retrieve</param>
+        /// <param name="resourceType">The type of resource being retrieved - for error reporting.</param>
+        /// <returns>An open stream containing the response.</returns>
+        /// <exception cref="ApplicationException">An exception with a user-friendly error message.</exception>
+        public static Stream Get(string url, string resourceType)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
             HttpResponseMessage response;
             try
             {
                 response = s_client.SendAsync(request).GetAwaiter().GetResult();
+                if (!response.IsSuccessStatusCode)
+                {
+                     throw new ApplicationException($"{resourceType} not found at {url} ({(int)response.StatusCode} {response.ReasonPhrase})");
+                }
+                return response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
             }
-            catch (HttpRequestException err)
+            catch (HttpRequestException err) {
+                if (err.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    throw new ApplicationException($"{resourceType} not found at {url} (404 Not Found).");
+                }
+                throw new ApplicationException($"{resourceType} not found at {url} ({err.Message})");
+            }
+            catch (System.Net.Sockets.SocketException)
             {
-                if (err.InnerException != null) throw err.InnerException;
-                throw;
+                throw new ApplicationException($"{resourceType} not found at {url} (DNS Lookup Failure)");
             }
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException($"HTTP Error: {(int)response.StatusCode} {response.ReasonPhrase}");
-            }
-            return response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
         }
 
         public static String GetString(string url)

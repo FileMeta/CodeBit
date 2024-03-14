@@ -15,8 +15,7 @@ namespace CodeBit
     {
         public static void ValidateFile(string filename)
         {
-            (var fileValidationLevel, var fileMetadata) = ValidateFileAndReport(filename, "Metadata");
-            if (fileMetadata is null) return;
+            (var fileValidationLevel, var fileMetadata) = ValidateFileAndReport(filename);
 
             Console.Write(fileMetadata.ToString());
             Console.WriteLine();
@@ -85,7 +84,7 @@ namespace CodeBit
             if (dirUrl is null)
             {
                 Console.WriteLine($"No dir TXT record found on domain '{domainName}'.");
-                Console.WriteLine($"DNS must include a TXT record on the domain '_dir.{domainName}' that contains\nthe URL, 'dir=<url of the directory>'.");
+                Console.WriteLine($"DNS must include a TXT record on the domain '_dir.{domainName}' that contains\n  'dir=<url of the directory>'.");
                 return;
             }
 
@@ -182,26 +181,17 @@ namespace CodeBit
             }
         }
 
-        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateFileAndReport(string filename, string label)
+        private static (ValidationLevel validationLevel, CodeBitMetadata metadata) ValidateFileAndReport(string filename)
         {
-            Console.WriteLine($"Validating {label} in '{filename}'...");
-            return ValidateAndReport(MetadataLoader.ReadCodeBitFromFile(filename), label);
+            Console.WriteLine($"Validating Metadata in '{filename}'...");
+            var metadata = MetadataLoader.ReadCodeBitFromFile(filename);
+            return (ValidateAndReport(metadata), metadata);
         }
 
         private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateUrlAndReport(string url, string label)
         {
             Console.WriteLine($"Validating {label} in '{url}'...");
-            return ValidateAndReport(MetadataLoader.ReadCodeBitFromUrl(url), label);
-        }
-
-        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateAndReport(CodeBitMetadata? metadata, string label)
-        {
-            if (metadata is null)
-            {
-                Console.WriteLine($"CodeBit not found.");
-                Console.WriteLine();
-                return (ValidationLevel.Fail, null);
-            }
+            var metadata = MetadataLoader.ReadCodeBitFromUrl(url);
             return (ValidateAndReport(metadata), metadata);
         }
 

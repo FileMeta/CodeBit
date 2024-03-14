@@ -78,6 +78,21 @@
       "commandName": "Project",
       "commandLineArgs": "ToJson -name sample.FileMeta.org/VideoFeedback.html",
       "workingDirectory": "C:\\Users\\brand\\Source\\FileMeta\\filemeta.github.io\\samples"
+    },
+    "Validate Directory 404": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate -dir non.FileMeta.org",
+      "workingDirectory": ".\\CodeBits"
+    },
+    "Validate Directory NoDir": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate -dir phred.FileMeta.org",
+      "workingDirectory": ".\\CodeBits"
+    },
+    "ValidateDirectory BadDomain": {
+      "commandName": "Project",
+      "commandLineArgs": "Validate -dir nonexistentdomain.io",
+      "workingDirectory": ".\\CodeBits"
     }
   }
 }

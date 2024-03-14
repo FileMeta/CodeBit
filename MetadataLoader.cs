@@ -43,7 +43,7 @@ namespace CodeBit
         /// </summary>
         /// <param name="filename">The Filename</param>
         /// <returns>Metadaata or Null if file not found.</returns>
-        public static CodeBitMetadata? ReadCodeBitFromFile(string filename)
+        public static CodeBitMetadata ReadCodeBitFromFile(string filename)
         {
             try
             {
@@ -56,27 +56,33 @@ namespace CodeBit
             }
             catch (FileNotFoundException)
             {
-                return null;
+                throw new ApplicationException("CodeBit not found: " + filename);
             }
         }
 
-        public static CodeBitMetadata? ReadCodeBitFromUrl(string url)
+        public static CodeBitMetadata ReadCodeBitFromUrl(string url)
         {
-            try
+            using (var stream = Http.Get(url, "CodeBit"))
             {
-                using (var stream = Http.Get(url)) {
-                    return ReadCodeBitFromStream(stream);
-                }
+                return ReadCodeBitFromStream(stream);
             }
-            catch (HttpRequestException err)
-            {
-                if (err.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
-                throw;
-            }
-            catch (System.Net.Sockets.SocketException)
-            {
-                return null; // Host not found.
-            }
+        }
+
+        public static CodeBitMetadata ReadCodeBitFromName(string name, SemVer? version)
+        {
+            var domainName = MetadataLoader.GetCodebitDomainName(name);
+            var dirUrl = GetDirectoryUrl(domainName);
+            if (dirUrl is null)
+                throw new ApplicationException($"Domain '{domainName}' does not have a directory.");
+            var reader = GetDirectoryFromUrl(dirUrl);
+            if (reader == null)
+                throw new ApplicationException($"Unable to read directory for '{domainName}' from URL '{dirUrl}'.");
+            var metadata = reader.Find(name, version ?? SemVer.Max);
+            if (metadata is null)
+                throw new ApplicationException((version is null)
+                ? $"Unable to find a directory entry for '{name}'."
+                : $"Unable to find a directory entry for '{name}' version '{version}'.");
+            return metadata;
         }
 
         public static bool IsHttpUrl(string urlOrFilename)
@@ -107,23 +113,12 @@ namespace CodeBit
                 case TargetType.CodebitUrl:
                     {
                         var metadata = ReadCodeBitFromUrl(target);
-                         if (metadata is null) throw new ApplicationException($"Codebit at URL '{target}' not found.");
+                        if (metadata is null) throw new ApplicationException($"Codebit at URL '{target}' not found.");
                         return metadata;
                     }
 
                 case TargetType.CodebitName:
-                    {
-                        var domainName = MetadataLoader.GetCodebitDomainName(target);
-                        var dirUrl = GetDirectoryUrl(domainName);
-                        if (dirUrl is null) throw new ApplicationException($"Domain '{domainName}' does not have a directory.");
-                        var reader = GetDirectoryFromUrl(dirUrl);
-                        if (reader == null) throw new ApplicationException($"Unable to read directory for '{domainName}' from URL '{dirUrl}'.");
-                        var metadata = reader.Find(target, version ?? SemVer.Max);
-                        if (metadata is null) throw new ApplicationException((version is null)
-                            ? $"Unable to find a directory entry for '{target}'."
-                            : $"Unable to find a directory entry for '{target}' version '{version}'.");
-                        return metadata;
-                    }
+                    return ReadCodeBitFromName(target, version);
 
                 case TargetType.DirectoryDomain:
                     throw new ArgumentException($"Cannot specify a directory domain for this operation.");
@@ -154,22 +149,9 @@ namespace CodeBit
             return null;
         }
 
-        public static DirectoryReader? GetDirectoryFromUrl(string url)
+        public static DirectoryReader GetDirectoryFromUrl(string url)
         {
-            try
-            {
-                return new DirectoryReader(Http.Get(url));
-            }
-            catch (HttpRequestException err)
-            {
-                if (err.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
-                throw;
-            }
-            catch (System.Net.Sockets.SocketException)
-            {
-                return null; // Host not found.
-            }
-
+            return new DirectoryReader(Http.Get(url, "Directory"));
         }
     }
 }

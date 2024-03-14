@@ -20,6 +20,15 @@ namespace CodeBit
   CodeBit <Action> [arguments...]
 
 Actions:
+  Get [-name] <codeBitName> [-v <version>]
+    Retrieve the codebit with the given name (and optional version) and
+    place it in the current directory. The '-name' prefix is optional as
+    retrieval by name is the default.
+
+  Get -url <url>
+    Retrieve the codebit at the specified URL and place it in the current
+    directory.
+
   Validate [-file] <filename>
     Validate the codebit metadata in the designated file.
     The '-file' argument prefix is optional as it expects a filename.
@@ -39,6 +48,26 @@ Actions:
 
   GetVersion
     Report the version of this codebit tool.
+
+Arguments:
+  -name <codeBitName>
+    The name of a codebit. A codebit name is composed of a domain name
+    followed by a path. For example, ""filemeta.org/sample.txt"".
+
+  -url <url>
+    The URL from which a codebit can be downloaded.
+
+  -file <filename>
+    The path and name of a file on the local computer. The path may be
+    relative to the current directory.
+
+  -dir <domainName>
+    The domain name from which a directory can be referenced. The directory
+    is identified using a specially-formatted DNS TXT record. See the CodeBit
+    documentation for more information.
+
+For the CodeBit specification and more information about CodeBits, see
+https://FileMeta.org/CodeBit
 ";
 
 
@@ -69,6 +98,11 @@ Actions:
             // Get the command
             switch (cl.ReadNextArg()?.ToLowerInvariant())
             {
+                case "get":
+                    s_operation = Get;
+                    defaultTargetType = TargetType.CodebitName;
+                    break;
+
                 case "validate":
                     s_operation = Validate;
                     defaultTargetType = TargetType.Filename;
@@ -157,6 +191,41 @@ Actions:
                     s_targetType = defaultTargetType;
                 }
             }
+        }
+
+        static void Get() {
+            if (s_targetType == TargetType.Unknown || string.IsNullOrWhiteSpace(s_target)) {
+                Console.Error.WriteLine("No source specified for Get command.");
+                return;
+            }
+
+            // If targetType is by name, retrieve the metadata from the directory
+            CodeBitMetadata? dirMetadata = null;
+            string url;
+            if (s_targetType == TargetType.CodebitName) {
+                // Throws ApplicationException if not found.
+                dirMetadata = MetadataLoader.ReadCodeBitFromName(s_target, s_version);
+                url = dirMetadata.Url;
+            }
+            else if (s_targetType == TargetType.CodebitUrl) {
+                url = s_target;
+            }
+            else {
+                Console.Error.WriteLine("Get command requires either codebit name or url.");
+                return;
+            }
+
+            // Get the codebit stream
+            using var stream = Http.Get(url, "CodeBit");
+            Debug.Assert(stream.CanSeek);
+
+            // Read the metadata from the codebit
+            var metadata = MetadataLoader.ReadCodeBitFromStream(stream);
+
+            // Make sure the metadata matches
+            // Look for an existing file and get permission to overwrite
+            // Copy the stream to the file.
+
         }
 
         static void Validate()
