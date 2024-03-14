@@ -188,7 +188,7 @@ namespace CodeBit
             return (ValidateAndReport(metadata), metadata);
         }
 
-        private static (ValidationLevel validationLevel, CodeBitMetadata? metadata) ValidateUrlAndReport(string url, string label)
+        private static (ValidationLevel validationLevel, CodeBitMetadata metadata) ValidateUrlAndReport(string url, string label)
         {
             Console.WriteLine($"Validating {label} in '{url}'...");
             var metadata = MetadataLoader.ReadCodeBitFromUrl(url);

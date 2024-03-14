@@ -170,6 +170,23 @@ namespace CodeBit
         /// </summary>
         public string? FilenameForValidation { get; set; }
 
+        private readonly char[] c_anySlash = new char[] { '/', '\\' };
+
+        /// <summary>
+        /// Filename part of name
+        /// </summary>
+        public string FilenameFromName
+        {
+            get
+            {
+                var name = Name;
+                var n = name.LastIndexOfAny(c_anySlash);
+                if (n >= 0)
+                    name = name.Substring(n + 1);
+                return name;
+            }
+        }
+
         public bool IsCodeBit
         {
             get
@@ -309,7 +326,7 @@ namespace CodeBit
 
             if (ValidateRequiredSingle(key_url, ref validationLevel, validationDetail))
             {
-                if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri uri))
+                if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri? uri))
                 {
                     validationLevel |= ValidationLevel.FailMandatory;
                     validationDetail.AppendLine("'url' property is not a valid URL.");

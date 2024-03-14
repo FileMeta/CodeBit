@@ -93,6 +93,16 @@
       "commandName": "Project",
       "commandLineArgs": "Validate -dir nonexistentdomain.io",
       "workingDirectory": ".\\CodeBits"
+    },
+    "Get by Name": {
+      "commandName": "Project",
+      "commandLineArgs": "Get sample.FileMeta.org/VideoFeedback.html",
+      "workingDirectory": "C:\\Users\\brand\\Downloads"
+    },
+    "Get by Name and Version": {
+      "commandName": "Project",
+      "commandLineArgs": "Get sample.FileMeta.org/VideoFeedback.html -v 0.0.0-beta",
+      "workingDirectory": "C:\\Users\\brand\\Downloads"
     }
   }
 }

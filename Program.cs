@@ -199,12 +199,22 @@ https://FileMeta.org/CodeBit
                 return;
             }
 
+            ValidationLevel validationLevel;
+            string validationDetail;
+
             // If targetType is by name, retrieve the metadata from the directory
             CodeBitMetadata? dirMetadata = null;
             string url;
             if (s_targetType == TargetType.CodebitName) {
                 // Throws ApplicationException if not found.
                 dirMetadata = MetadataLoader.ReadCodeBitFromName(s_target, s_version);
+                (validationLevel, validationDetail) = dirMetadata.Validate();
+                if (validationLevel >= ValidationLevel.FailMandatory)
+                {
+                    Console.Error.WriteLine($"Error: Directory metadata for '{s_target}' fails validation.");
+                    Console.Error.WriteLineIndented(3, validationDetail);
+                    return;
+                }
                 url = dirMetadata.Url;
             }
             else if (s_targetType == TargetType.CodebitUrl) {
@@ -221,11 +231,62 @@ https://FileMeta.org/CodeBit
 
             // Read the metadata from the codebit
             var metadata = MetadataLoader.ReadCodeBitFromStream(stream);
+            (validationLevel, validationDetail) = metadata.Validate();
+            if (validationLevel >= ValidationLevel.FailMandatory)
+            {
+                Console.Error.WriteLine($"Error: CodeBit fails validation");
+                Console.Error.WriteLineIndented(3, validationDetail);
+                return;
+            }
 
-            // Make sure the metadata matches
-            // Look for an existing file and get permission to overwrite
-            // Copy the stream to the file.
+            // If retrieved by name from the directory, test for match
+            if (dirMetadata is not null)
+            {
+                (validationLevel, validationDetail) = metadata.CompareTo(dirMetadata, "CodeBit", "Directory", true);
+                if (validationLevel > ValidationLevel.FailMandatory)
+                {
+                    Console.Error.WriteLine("Error: CodeBit metadata doesn't match directory.");
+                    Console.Error.WriteLineIndented(3, validationDetail);
+                    return;
+                }
+            }
 
+            // Check for an existing file
+            var filename = metadata.FilenameFromName;
+            if (File.Exists(filename))
+            {
+                // Attempt to read the existing file's metadata
+                var fileMetadata = MetadataLoader.ReadCodeBitFromFile(filename);
+                if (string.Equals(fileMetadata.Hash, metadata.Hash))
+                {
+                    Console.Error.WriteLine($"Existing codebit '{filename}' matches online. No update performed.");
+                    return;
+                }
+
+                if (!fileMetadata.Version.Equals(SemVer.Zero))
+                {
+                    var cmp = fileMetadata.Version.CompareTo(metadata.Version);
+                    var cmpStr = (cmp < 0) ? "older than" : (cmp > 0) ? "newer than" : "same as";
+
+                    Console.WriteLine($"Existing file '{filename}' v{fileMetadata.Version} is {cmpStr} CodeBit v{metadata.Version}.");
+                }
+                else
+                {
+                    Console.WriteLine($"File '{filename}' exists.");
+                }
+                Console.WriteLine("Overwrite (y/n)?");
+                var answer = Console.ReadLine()?.ToLower();
+
+                if (answer != "y" && answer != "yes")
+                    return;
+            }
+
+            // Finally, all is OK. Copy over the CodeBit!
+            using (var outFile = File.Create(filename)) {
+                stream.Position = 0;
+                stream.CopyTo(outFile);
+            }           
+            Console.WriteLine($"Downloaded CodeBit '{filename}'.");
         }
 
         static void Validate()
