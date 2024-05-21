@@ -5,12 +5,6 @@ using System.IO;
 using Bredd;
 using FileMeta;
 
-/* Feature Backlog
-* ToJson calculates the SHA-256 hash as part of its operation
-* Validation checks hashes
-* Get, with hash check
-*/
-
 namespace CodeBit
 {
     internal class Program
@@ -141,6 +135,8 @@ https://FileMeta.org/CodeBit
 
                 default:
                     Console.WriteLine($"Unknown command \"{cl.Current}\".");
+                    Console.WriteLine($"For syntax: CodeBit -h");
+                    s_operation = NullOperation;
                     return;
             }
 
@@ -268,7 +264,8 @@ https://FileMeta.org/CodeBit
                     var cmp = fileMetadata.Version.CompareTo(metadata.Version);
                     var cmpStr = (cmp < 0) ? "older than" : (cmp > 0) ? "newer than" : "same as";
 
-                    Console.WriteLine($"Existing file '{filename}' v{fileMetadata.Version} is {cmpStr} CodeBit v{metadata.Version}.");
+                    Console.WriteLine($"Existing file '{filename}' version v{fileMetadata.Version} is {cmpStr} CodeBit version v{metadata.Version}.");
+                    if (cmp == 0) Console.WriteLine("However, the contents don't match.");
                 }
                 else
                 {
@@ -340,6 +337,10 @@ https://FileMeta.org/CodeBit
         static void GetVersion()
         {
             Console.WriteLine(new FileMeta.AssemblyMetadata(typeof(Program)).Summary);
+        }
+
+        static void NullOperation()
+        {
         }
 
         static void Test() {
