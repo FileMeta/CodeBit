@@ -10,6 +10,8 @@
     <RepositoryType>git</RepositoryType>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
+    <Title>Codebit Command-Line Utility</Title>
+    <Authors>Brandt Redd</Authors>
   </PropertyGroup>
 
 </Project>

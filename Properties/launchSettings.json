@@ -103,6 +103,11 @@
       "commandName": "Project",
       "commandLineArgs": "Get sample.FileMeta.org/VideoFeedback.html -v 0.0.0-beta",
       "workingDirectory": "C:\\Users\\brand\\Downloads"
+    },
+    "GetVersion": {
+      "commandName": "Project",
+      "commandLineArgs": "GetVersion",
+      "remoteDebugEnabled": true
     }
   }
 }
