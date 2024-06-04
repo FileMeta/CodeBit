@@ -27,16 +27,20 @@ namespace CodeBit
         /// <param name="resourceType">The type of resource being retrieved - for error reporting.</param>
         /// <returns>An open stream containing the response.</returns>
         /// <exception cref="ApplicationException">An exception with a user-friendly error message.</exception>
-        public static Stream Get(string url, string resourceType)
+        public static Stream Get(string url, string resourceType, string? accept = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrWhiteSpace(accept)) {
+                request.Headers.Add("Accept", accept);
+            }
             HttpResponseMessage response;
             try
             {
                 response = s_client.SendAsync(request).GetAwaiter().GetResult();
                 if (!response.IsSuccessStatusCode)
                 {
-                     throw new ApplicationException($"{resourceType} not found at {url} ({(int)response.StatusCode} {response.ReasonPhrase})");
+                    var detail = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    throw new ApplicationException($"Failed to read {resourceType} from {url}. ({(int)response.StatusCode} {response.ReasonPhrase})\r\n{detail}");
                 }
                 return response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
             }

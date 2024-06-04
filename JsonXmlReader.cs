@@ -46,9 +46,10 @@ namespace CodeBit
 
         public bool Skip()
         {
-            if (m_nodeType != JsonNodeType.StartObject && m_nodeType != JsonNodeType.StartArray)
-                throw new InvalidOperationException("JsonXmlReader.Skip() must be called at a StartObject or StartArray");
-            m_xmlReader.Skip();
+            if (m_nodeType == JsonNodeType.StartObject || m_nodeType == JsonNodeType.StartArray)
+                m_xmlReader.Skip();
+            else
+                m_xmlReader.Read();
             return ToJsonNode();
         }
 

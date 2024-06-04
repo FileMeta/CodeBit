@@ -137,7 +137,7 @@ namespace CodeBit
 
         public static string? GetDirectoryUrl(string domainName)
         {
-            var txtRecords = WinDnsQuery.GetTxtRecords("_dir." + domainName);
+            var txtRecords = DnsOverHttps.GetTxtRecords("_dir." + domainName);
             if (txtRecords != null)
             {
                 foreach (var txtRecord in txtRecords)
