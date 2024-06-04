@@ -5,18 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using static System.Net.WebRequestMethods;
 
 namespace CodeBit
 {
     internal static class DnsOverHttps {
         const string c_acceptType = "application/dns-json";
-        const string c_defaultDnsHost = "cloudflare-dns.com";
-        static string s_dnsHost = c_defaultDnsHost;
+        const string c_cloudflareDns = "https://cloudflare-dns.com/dns-query";
+        //const string c_googleDns = "https://8.8.8.8/resolve";
+        static string s_dnsUrl = c_cloudflareDns;
 
-        static public string DnsHost { get { return s_dnsHost; } set { s_dnsHost = value; } }
+        static public string DnsUrl { get { return s_dnsUrl; } set { s_dnsUrl = value; } }
 
         public static string[] GetTxtRecords(string domainName) {
-            string url = $"https://{DnsHost}/dns-query?name={HttpUtility.UrlEncode(domainName)}&type=TXT";
+            if (!DnsUrl.StartsWith("https://")) throw new ApplicationException("DNS URL must start with https://");
+            string url = $"{DnsUrl}?name={HttpUtility.UrlEncode(domainName)}&type=TXT";
             var reader = JsonXmlReader.Create(Http.Get(url, "DNS TXT", c_acceptType));
 
             reader.Read();
