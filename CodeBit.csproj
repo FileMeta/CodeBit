@@ -1,17 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageProjectUrl>https://github.com/filemeta/CodeBit</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/filemeta/CodeBit</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
-    <Title>Codebit Command-Line Utility</Title>
-    <Authors>Brandt Redd</Authors>
+	<PackageProjectUrl>https://github.com/filemeta/CodeBit</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/filemeta/CodeBit</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	<AssemblyVersion>1.1.0.0</AssemblyVersion>
+	<FileVersion>1.1.0.0</FileVersion>
+	<Title>Codebit Command-Line Utility</Title>
+	<Authors>Brandt Redd</Authors>
   </PropertyGroup>
 
 </Project>
