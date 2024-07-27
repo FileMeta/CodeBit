@@ -7,6 +7,14 @@ using FileMeta;
 
 namespace CodeBit
 {
+    enum TargetType {
+        Unknown,
+        Filename,
+        CodebitUrl,
+        CodebitName,
+        DirectoryDomain
+    }
+
     internal class Program
     {
         const string c_syntax =
@@ -65,30 +73,39 @@ https://FileMeta.org/CodeBit
 ";
 
 
-        static Action? s_operation;
+        static Func<int>? s_operation;
         static string s_target = string.Empty;
         static TargetType s_targetType = TargetType.Unknown;
         static SemVer? s_version = null;
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             try
             {
-                ParseCommandLine();
-                Debug.Assert(s_operation != null);
-                s_operation();
+                ParseCommandLine(Environment.CommandLine);
+                Debug.Assert(s_operation is not null);
+                return s_operation();
             }
             catch (Exception err)
             {
                 Console.WriteLine(err.Message);
+                return -2;
             }
         }
 
-        static void ParseCommandLine()
+        internal static int TestMain(string args) {
+            // No try/catch. Let the tester capture any exceptions.
+            ParseCommandLine(args);
+            if (s_operation is null)
+                throw new ApplicationException("ParseCommandLine failed to set an operation.");
+            return s_operation();
+        }
+
+        static void ParseCommandLine(string args)
         {
             TargetType defaultTargetType = TargetType.Unknown;
 
-            var cl = new CommandLineLexer();
+            var cl = new CommandLineLexer(args);
             // Get the command
             switch (cl.ReadNextArg()?.ToLowerInvariant())
             {
@@ -189,10 +206,10 @@ https://FileMeta.org/CodeBit
             }
         }
 
-        static void Get() {
+        static int Get() {
             if (s_targetType == TargetType.Unknown || string.IsNullOrWhiteSpace(s_target)) {
                 Console.Error.WriteLine("No source specified for Get command.");
-                return;
+                return -1;
             }
 
             ValidationLevel validationLevel;
@@ -209,7 +226,7 @@ https://FileMeta.org/CodeBit
                 {
                     Console.Error.WriteLine($"Error: Directory metadata for '{s_target}' fails validation.");
                     Console.Error.WriteLineIndented(3, validationDetail);
-                    return;
+                    return -1;
                 }
                 url = dirMetadata.Url;
             }
@@ -218,7 +235,7 @@ https://FileMeta.org/CodeBit
             }
             else {
                 Console.Error.WriteLine("Get command requires either codebit name or url.");
-                return;
+                return -1;
             }
 
             // Get the codebit stream
@@ -232,7 +249,7 @@ https://FileMeta.org/CodeBit
             {
                 Console.Error.WriteLine($"Error: CodeBit fails validation");
                 Console.Error.WriteLineIndented(3, validationDetail);
-                return;
+                return -1;
             }
 
             // If retrieved by name from the directory, test for match
@@ -243,7 +260,7 @@ https://FileMeta.org/CodeBit
                 {
                     Console.Error.WriteLine("Error: CodeBit metadata doesn't match directory.");
                     Console.Error.WriteLineIndented(3, validationDetail);
-                    return;
+                    return -1;
                 }
             }
 
@@ -256,7 +273,7 @@ https://FileMeta.org/CodeBit
                 if (string.Equals(fileMetadata.Hash, metadata.Hash))
                 {
                     Console.Error.WriteLine($"Existing codebit '{filename}' matches online. No update performed.");
-                    return;
+                    return 0;
                 }
 
                 if (!fileMetadata.Version.Equals(SemVer.Zero))
@@ -275,7 +292,7 @@ https://FileMeta.org/CodeBit
                 var answer = Console.ReadLine()?.ToLower();
 
                 if (answer != "y" && answer != "yes")
-                    return;
+                    return -1;
             }
 
             // Finally, all is OK. Copy over the CodeBit!
@@ -284,81 +301,80 @@ https://FileMeta.org/CodeBit
                 stream.CopyTo(outFile);
             }           
             Console.WriteLine($"Downloaded CodeBit '{filename}'.");
+            return 0;
         }
 
-        static void Validate()
+        static int Validate()
         {
             switch (s_targetType)
             {
                 case TargetType.Filename:
-                    CodeBitValidator.ValidateFile(s_target);
-                    break;
+                    return CodeBitValidator.ValidateFile(s_target);
 
                 case TargetType.CodebitUrl:
-                    CodeBitValidator.ValidatePublishedCodebit(s_target);
-                    break;
+                    return CodeBitValidator.ValidatePublishedCodebit(s_target);
 
                 case TargetType.CodebitName:
-                    CodeBitValidator.ValidateByName(s_target, s_version);
-                    break;
+                    return CodeBitValidator.ValidateByName(s_target, s_version);
 
                 case TargetType.DirectoryDomain:
-                    CodeBitValidator.ValidateDirectory(s_target);
-                    break;
+                    return CodeBitValidator.ValidateDirectory(s_target);
 
                 default:
                     Console.Error.WriteLine("No target specified for Validate command.");
-                    break;
+                    return -1;
             }
         }
 
-        static void ToJson()
+        static int ToJson()
         {
             if (s_targetType == TargetType.Unknown || string.IsNullOrWhiteSpace(s_target))
             {
                 Console.Error.WriteLine("No target specified for ToJson command.");
-                return;
+                return -1;
             }
             CodeBitMetadata? metadata = MetadataLoader.Read(s_target, s_targetType, s_version);
             if (metadata == null)
             {
                 Console.Error.WriteLine($"Target '{s_target}' not found.");
-                return;
+                return -1;
             }
 
             metadata.ToJson(Console.Out);
+            return 0;
         }
 
-        static void GetSyntax()
+        static int GetSyntax()
         {
             Console.WriteLine(c_syntax);
+            return 0;
         }
 
-        static void GetVersion()
+        static int GetVersion()
         {
             Console.WriteLine(new FileMeta.AssemblyMetadata(typeof(Program)).Summary);
+            return 0;
         }
 
-        static void NullOperation()
+        static int NullOperation()
         {
+            return 0;
         }
 
-        static void Test() {
+        static int Test() {
             using (var instr = new LineEndFilterStream(File.OpenRead(@"C:\Users\brand\Source\FileMeta\CodeBit\CodeBits\CommandLineLexer.cs"))) {
                 using (var outstr = File.Create(@"C:\Users\brand\downloads\CommandLineLexer.cs")) {
                     instr.CopyTo(outstr);
                 }
             }
+            return 0;
         }
     } // Class Program
 
-    enum TargetType
-    {
-        Unknown,
-        Filename,
-        CodebitUrl,
-        CodebitName,
-        DirectoryDomain
+    public static class TestHarness {
+        public static int Run(string args) {
+            return Program.TestMain(args);
+        }
     }
 
 }

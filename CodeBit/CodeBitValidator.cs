@@ -13,13 +13,13 @@ namespace CodeBit
 {
     internal static class CodeBitValidator
     {
-        public static void ValidateFile(string filename)
+        public static int ValidateFile(string filename)
         {
             (var fileValidationLevel, var fileMetadata) = ValidateFileAndReport(filename);
 
             Console.Write(fileMetadata.ToString());
             Console.WriteLine();
-            if (fileValidationLevel > ValidationLevel.FailRecommended) return;
+            if (fileValidationLevel > ValidationLevel.FailRecommended) return -1;
 
             (var pubValidationLevel, var pubMetadata) = ValidateUrlAndReport(fileMetadata.Url, "Published Copy");
 
@@ -29,22 +29,22 @@ namespace CodeBit
                 CompareAndReport(fileMetadata, pubMetadata, "File", "Published", true);
             }
 
-            CompareWithDirectoryAndReport(fileMetadata, "File");
+            return CompareWithDirectoryAndReport(fileMetadata, "File");
         }
 
-        public static void ValidatePublishedCodebit(string url)
+        public static int ValidatePublishedCodebit(string url)
         {
             (var fileValidationLevel, var metadata) = ValidateUrlAndReport(url, "Published Metadata");
-            if (metadata is null) return;
+            if (metadata is null) return -1;
 
             Console.Write(metadata.ToString());
             Console.WriteLine();
-            if (fileValidationLevel > ValidationLevel.FailRecommended) return;
+            if (fileValidationLevel > ValidationLevel.FailRecommended) return -1;
 
-            CompareWithDirectoryAndReport(metadata, "Published Metadata");
+            return CompareWithDirectoryAndReport(metadata, "Published Metadata");
         }
 
-        public static void ValidateByName(string codebitName, SemVer? version = null)
+        public static int ValidateByName(string codebitName, SemVer? version = null)
         {
             if (version is null)
             {
@@ -57,35 +57,37 @@ namespace CodeBit
             }
 
             var dirMetadata = FindInDirectoryOrReport(codebitName, version);
-            if (dirMetadata is null) return;
+            if (dirMetadata is null) return -1;
 
             if (string.IsNullOrWhiteSpace(dirMetadata.Url))
             {
                 Console.WriteLine("Invalid directory entry. No URL specified.");
-                return;
+                return -1;
             }
 
             (var pubValidationLevel, var pubMetadata) = ValidateUrlAndReport(dirMetadata.Url, "Published Copy");
-            if (pubMetadata is null) return;
+            if (pubMetadata is null) return -1;
 
             Console.Write(pubMetadata.ToString());
             Console.WriteLine();
-            if (pubValidationLevel > ValidationLevel.FailRecommended) return;
+            if (pubValidationLevel > ValidationLevel.FailRecommended) return -1;
 
             Console.WriteLine("Comparing with directory entry...");
             CompareAndReport(pubMetadata, dirMetadata, "Published", "Directory");
 
-            if (pubMetadata is null || pubValidationLevel > ValidationLevel.FailRecommended) return;
+            if (pubMetadata is null || pubValidationLevel > ValidationLevel.FailRecommended) return -1;
+
+            return 0;
         }
 
-        public static void ValidateDirectory(string domainName)
+        public static int ValidateDirectory(string domainName)
         {
             var dirUrl = MetadataLoader.GetDirectoryUrl(domainName);
             if (dirUrl is null)
             {
                 Console.WriteLine($"No dir TXT record found on domain '{domainName}'.");
                 Console.WriteLine($"DNS must include a TXT record on the domain '_dir.{domainName}' that contains\n  'dir=<url of the directory>'.");
-                return;
+                return -1;
             }
 
             Console.WriteLine($"DNS Success: Directory for '{domainName}' is located at '{dirUrl}'.");
@@ -95,7 +97,7 @@ namespace CodeBit
             if (reader is null)
             {
                 Console.WriteLine("Directory not found.");
-                return;
+                return -1;
             }
 
             using (reader)
@@ -178,6 +180,7 @@ namespace CodeBit
                 if (nFailToCompare > 0) Console.WriteLine($"{nFailToCompare} CodeBits failed comparison.");
                 if (nSourceCode > 0) Console.WriteLine($"{nSourceCode} Non-CodeBit source code entries in the directory.");
                 if (nOther > 0) Console.WriteLine($"{nOther} other entries in the directory.");
+                return nFailToValidate + nFailToCompare > 0 ? -1 : 0;
             }
         }
 
@@ -239,18 +242,18 @@ namespace CodeBit
             return cmpValidationLevel;
         }
 
-        private static void CompareWithDirectoryAndReport(CodeBitMetadata a, string aLabel)
+        private static int CompareWithDirectoryAndReport(CodeBitMetadata a, string aLabel)
         {
             Console.WriteLine($"Validating directory entry for '{a.Name}' v{a.Version}...");
 
             var dirMetadata = FindInDirectoryOrReport(a.Name, a.Version);
-            if (dirMetadata is null) return;
+            if (dirMetadata is null) return -1;
 
             var validationLevel = ValidateAndReport(dirMetadata);
-            if (validationLevel > ValidationLevel.FailRecommended) return;
+            if (validationLevel > ValidationLevel.FailRecommended) return -1;
 
             Console.WriteLine($"Comparing {aLabel} with directory...");
-            CompareAndReport(a, dirMetadata, aLabel, "Directory");
+            return CompareAndReport(a, dirMetadata, aLabel, "Directory") >= ValidationLevel.FailMandatory ? -1 : 0;
         }
 
         static public CodeBitMetadata? FindInDirectoryOrReport(string codeBitName, SemVer version)
@@ -308,4 +311,3 @@ namespace CodeBit
         }
     }
 }
- 
