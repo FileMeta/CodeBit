@@ -6,13 +6,13 @@
       "@type": "SoftwareSourceCode",
       "name": "sample.codebit.net/VideoFeedback.html",
       "description": "CodeBit demo of WebRTC video.",
-      "url": "https://raw.githubusercontent.com/FileMeta/filemeta.github.io/main/samples/VideoFeedback.html",
+      "url": "https://raw.githubusercontent.com/FileMeta/CodeBit/main/TestResources/VideoFeedback.html",
       "version": "1.0.0",
       "keywords": "CodeBit",
       "datePublished": "2023-05-17T15:36:00",
       "author": "Brandt Redd",
       "license": "https://opensource.org/license/unlicense/",
-      "hash": "SHA256:DE111C2FBCEC72B9DD0BB3F677301C4FA04CF8AF9ADDCC6135A9838D4D058CDE",
+      "hash": "SHA256:F1C217F24CDDDC94FEB261BB2AF075E1CEF4627763D979425F9C7565DA077160",
       "comment": "Entertaining WebRTC demo. But mostly here as a sample for CodeBit infrastructure testing."
     }
   ]
