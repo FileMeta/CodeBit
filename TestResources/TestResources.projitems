@@ -10,5 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)HelloWorld.txt" />
+    <Content Include="$(MSBuildThisFileDirectory)sample.codebit.net.directory.json" />
+    <Content Include="$(MSBuildThisFileDirectory)VideoFeedback.html" />
   </ItemGroup>
 </Project>
