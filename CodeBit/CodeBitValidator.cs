@@ -138,7 +138,7 @@ namespace CodeBit
                     if (codebitMetadata.IsCodeBit)
                     {
                         nCodeBits++;
-                        validationLevel = ValidateAndReport(codebitMetadata);
+                        validationLevel = ValidateAndReport("Directory Entry", codebitMetadata);
 
                         if (validationLevel <= ValidationLevel.FailRecommended)
                         {
@@ -188,32 +188,32 @@ namespace CodeBit
         {
             Console.WriteLine($"Validating Metadata in '{filename}'...");
             var metadata = MetadataLoader.ReadCodeBitFromFile(filename);
-            return (ValidateAndReport(metadata), metadata);
+            return (ValidateAndReport("Local CodeBit", metadata), metadata);
         }
 
         private static (ValidationLevel validationLevel, CodeBitMetadata metadata) ValidateUrlAndReport(string url, string label)
         {
             Console.WriteLine($"Validating {label} in '{url}'...");
             var metadata = MetadataLoader.ReadCodeBitFromUrl(url);
-            return (ValidateAndReport(metadata), metadata);
+            return (ValidateAndReport("Published CodeBit", metadata), metadata);
         }
 
-        private static ValidationLevel ValidateAndReport(CodeBitMetadata metadata)
+        private static ValidationLevel ValidateAndReport(string reference, CodeBitMetadata metadata)
         {
             (var validationLevel, var validationDetail) = metadata.Validate();
 
             if (validationLevel == ValidationLevel.Pass)
             {
-                Console.WriteLine("CodeBit metadata passes validation.");
+                Console.WriteLine($"{reference} metadata passes validation.");
             }
             else if (validationLevel == ValidationLevel.FailRecommended)
             {
-                Console.WriteLine("Warning: CodeBit fails one or more recommended but optional requirements:");
+                Console.WriteLine($"Warning: {reference} fails one or more recommended but optional requirements:");
                 Console.Out.WriteLineIndented(3, validationDetail);
             }
             else
             {
-                Console.WriteLine("CodeBit fails one or more mandatory requirements:");
+                Console.WriteLine($"Error: {reference} fails one or more mandatory requirements:");
                 Console.Out.WriteLineIndented(3, validationDetail);
             }
             Console.WriteLine();
@@ -249,7 +249,7 @@ namespace CodeBit
             var dirMetadata = FindInDirectoryOrReport(a.Name, a.Version);
             if (dirMetadata is null) return -1;
 
-            var validationLevel = ValidateAndReport(dirMetadata);
+            var validationLevel = ValidateAndReport("Directory Entry", dirMetadata);
             if (validationLevel > ValidationLevel.FailRecommended) return -1;
 
             Console.WriteLine($"Comparing {aLabel} with directory...");

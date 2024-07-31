@@ -29,8 +29,19 @@ namespace CodeBitUnitTest {
 
         [TestMethod()]
         public void T02_Validate_VideoFeedback() {
-            TestAndValidate("Validate VideoFeedback.html");
+            TestAndValidate("Validate VideoFeedback.html",
+                "Local CodeBit metadata passes validation.",
+                "Published CodeBit metadata passes validation.",
+                "File and Published CodeBits match.",
+                "Directory Entry metadata passes validation.",
+                "File and Directory CodeBits match.");
         }
+
+        [TestMethod()]
+        public void T03_ToJson_VideoFeedback() {
+            TestAndValidate("ToJson VideoFeedback.html");
+        }
+
 
 
         void TestAndValidate(string command, params string[] rxTests) {
@@ -60,18 +71,25 @@ namespace CodeBitUnitTest {
     public class ConsoleCapture : IDisposable {
 
         StringBuilder m_capture;
-        CaptureWriter? m_writer;
+        CaptureWriter? m_stdOut;
+        CaptureWriter? m_stdErr;
 
         public ConsoleCapture(StringBuilder capture) {
             m_capture = capture;
-            m_writer = new CaptureWriter(this, Console.Out);
-            Console.SetOut(m_writer);
+            m_stdOut = new CaptureWriter(this, Console.Out);
+            m_stdErr = new CaptureWriter(this, Console.Error);
+            Console.SetOut(m_stdOut);
+            Console.SetError(m_stdErr);
         }
 
         public void Dispose() {
-            if (m_writer != null) {
-                Console.SetOut(m_writer.ChainOutput);
-                m_writer = null;
+            if (m_stdErr is not null) {
+                Console.SetError(m_stdErr.ChainOutput);
+                m_stdErr = null;
+            }
+            if (m_stdOut is not null) {
+                Console.SetOut(m_stdOut.ChainOutput);
+                m_stdOut = null;
             }
         }
 
