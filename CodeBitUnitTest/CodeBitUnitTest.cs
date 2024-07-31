@@ -5,25 +5,36 @@ using System.Text.RegularExpressions;
 namespace CodeBitUnitTest {
     [TestClass]
     public class CodeBitUnitTest {
+        const string c_testResourcesDir = "TestResources";
 
-
-        [TestMethod]
-        public void GetVersion() {
-            TestAndValidate("GetVersion", "CodeBit", @"Version \d+\.\d+\.\d+\.\d+");
-        }
-
-        [TestMethod]
-        public void Booyah() {
-            var sb = new StringBuilder();
-            using (new ConsoleCapture(sb)) {
-                Console.WriteLine("Booyah!");
+        [TestInitialize]
+        public void TestInitialize() {
+            // Change the current directory to TestResources
+            var path = Environment.CurrentDirectory;
+            if (string.Equals(Path.GetFileName(path), c_testResourcesDir))
+                return; // Already in the right directory
+            while (!Directory.Exists(Path.Combine(path, c_testResourcesDir))) {
+                if (path is null || path.Length < 5)
+                    Assert.Fail($"Resource directory '{c_testResourcesDir}' not found!");
+                Console.WriteLine(path);
+                path = Path.GetDirectoryName(path);
             }
-            Debug.Write("-");
-            Debug.Write(sb.ToString());
-            Debug.WriteLine("-");
+            Environment.CurrentDirectory = Path.Combine(path, c_testResourcesDir);
         }
+
+        [TestMethod()]
+        public void T01_GetVersion() {
+            TestAndValidate("GetVersion", "^CodeBit$", @"^Version \d+\.\d+\.\d+\.\d+");
+        }
+
+        [TestMethod()]
+        public void T02_Validate_VideoFeedback() {
+            TestAndValidate("Validate VideoFeedback.html");
+        }
+
 
         void TestAndValidate(string command, params string[] rxTests) {
+            Console.WriteLine();
             Console.WriteLine("Testing: " + command);
 
             Console.WriteLine("----------------");
@@ -36,25 +47,13 @@ namespace CodeBitUnitTest {
             var output = capture.ToString();
             bool success = true;
             foreach(string rx in rxTests) {
-                Console.Write($"{rx}: ");
-                var match = Regex.Match(output, rx);
-                if (match.Success) {
-                    WriteInColor("success", ConsoleColor.Green);
-                }
-                else {
-                    WriteInColor("fail", ConsoleColor.Red);
+                var match = Regex.Match(output, rx, RegexOptions.ExplicitCapture|RegexOptions.Multiline);
+                Console.WriteLine($"{(match.Success ? "match:" : "miss: ")} {rx}");
+                if (!match.Success)
                     success = false;
-                }
-                Console.WriteLine();
             }
-            Assert.IsTrue(success);
-        }
-
-        static void WriteInColor(string text, ConsoleColor color) {
-            var save = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            Console.Write(text);
-            Console.ForegroundColor = save;
+            if (!success)
+                Assert.Fail("Failed to match one or more expected outputs.");
         }
     }
 
@@ -86,6 +85,8 @@ namespace CodeBitUnitTest {
             }
 
             public override void Write(char value) {
+                if (value == '\r')
+                    return; // Line endings are strictly '\n' for the sake of regex.
                 m_owner.m_capture.Append(value);
                 m_chainOutput.Write(value);
             }
