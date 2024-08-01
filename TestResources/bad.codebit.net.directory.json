@@ -24,8 +24,9 @@
       "keywords": "CodeBit",
       "datePublished": "2023-05-17T15:36:00",
       "license": "https://opensource.org/license/unlicense/",
+      "license": "https://opensource.org/somelicense",
       "hash": "SHA256:2844959D98FDB916E53C26EB1DC5E8EA546D8F56D4809D50FEAEB97FB6DA6362",
-      "comment": "Invalid date. Version doesn't exist."
+      "comment": "Missing author. Duplicate license."
     },
     {
       "@type": "ImageObject",
