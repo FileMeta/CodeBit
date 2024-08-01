@@ -19,7 +19,7 @@
       "@type": "SoftwareSourceCode",
       "name": "sample.codebit.net/VideoFeedback.html",
       "description": "CodeBit demo of WebRTC video.",
-      "url": "https://raw.githubusercontent.com/FileMeta/CodeBit/main/TestResources/VideoFeedback.html",
+      "url": "https://raw.githubusercontent.com/FileMeta/CodeBit/509444cc55dcfba1e005ae1c439bed111c242193/TestResources/VideoFeedback.html",
       "version": "1.0.0-alpha",
       "keywords": "CodeBit",
       "datePublished": "2023-05-17T15:36:00",
