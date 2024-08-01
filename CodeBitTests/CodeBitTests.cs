@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace CodeBitUnitTest {
     [TestClass]
-    public class CodeBitUnitTest {
+    public class CodeBitTests {
         const string c_testResourcesDir = "TestResources";
 
         [TestInitialize]

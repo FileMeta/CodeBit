@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeBit", "CodeBit\CodeBit.csproj", "{206B802B-9C6A-4169-9557-024F8123249E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeBitUnitTest", "CodeBitUnitTest\CodeBitUnitTest.csproj", "{9230B64A-F789-4D70-B1C6-C68C8C7FF223}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeBitTests", "CodeBitTests\CodeBitTests.csproj", "{9230B64A-F789-4D70-B1C6-C68C8C7FF223}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TestResources", "TestResources\TestResources.shproj", "{FA9A9537-F813-427A-B482-3124952BE799}"
 EndProject
