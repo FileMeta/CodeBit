@@ -125,8 +125,10 @@ namespace CodeBit
                 Console.WriteLine();
 
                 int nCodeBits = 0;
-                int nFailToValidate = 0;
-                int nFailToCompare = 0;
+                int nValidateFailures = 0;
+                int nValidateWarnings = 0;
+                int nCompareFailures = 0;
+                int nCompareWarnings = 0;
                 int nSourceCode = 0;
                 int nOther = 0;
                 for (; ; )
@@ -142,22 +144,31 @@ namespace CodeBit
 
                         if (validationLevel <= ValidationLevel.FailRecommended)
                         {
+                            if (validationLevel == ValidationLevel.FailRecommended)
+                                nValidateWarnings++;
+
                             (var pubValidationLevel, var pubMetadata) = ValidateUrlAndReport(codebitMetadata.Url, "Published Codebit");
                             if (pubValidationLevel <= ValidationLevel.FailRecommended)
                             {
-                                if (ValidationLevel.FailRecommended < CompareAndReport(codebitMetadata, pubMetadata, "Directory", "Published"))
-                                {
-                                    ++nFailToCompare;
+                                if (pubValidationLevel == ValidationLevel.FailRecommended)
+                                    nValidateWarnings++;
+
+                                var cmpValidationLevel = CompareAndReport(codebitMetadata, pubMetadata, "Directory", "Published");
+                                if (cmpValidationLevel > ValidationLevel.FailRecommended) {
+                                    ++nCompareFailures;
+                                }
+                                else if (cmpValidationLevel == ValidationLevel.FailRecommended) {
+                                    ++nCompareWarnings;
                                 }
                             }
                             else
                             {
-                                ++nFailToValidate;
+                                ++nValidateFailures;
                             }
                         }
                         else
                         {
-                            ++nFailToValidate;
+                            ++nValidateFailures;
                         }
                     }
                     else if (codebitMetadata.IsSoftwareSourceCode)
@@ -176,11 +187,13 @@ namespace CodeBit
                 }
 
                 Console.WriteLine($"{nCodeBits} CodeBits in the directory.");
-                if (nFailToValidate > 0) Console.WriteLine($"{nFailToValidate} CodeBits failed validation.");
-                if (nFailToCompare > 0) Console.WriteLine($"{nFailToCompare} CodeBits failed comparison.");
+                if (nValidateFailures > 0) Console.WriteLine($"{nValidateFailures} CodeBits failed validation.");
+                if (nValidateWarnings > 0) Console.WriteLine($"{nValidateWarnings} CodeBits with validation warnings.");
+                if (nCompareFailures > 0) Console.WriteLine($"{nCompareFailures} CodeBits failed comparison.");
+                if (nCompareWarnings > 0) Console.WriteLine($"{nCompareWarnings} CodeBits with comparison warnings.");
                 if (nSourceCode > 0) Console.WriteLine($"{nSourceCode} Non-CodeBit source code entries in the directory.");
                 if (nOther > 0) Console.WriteLine($"{nOther} other entries in the directory.");
-                return nFailToValidate + nFailToCompare > 0 ? -1 : 0;
+                return nValidateFailures + nCompareFailures > 0 ? -1 : 0;
             }
         }
 

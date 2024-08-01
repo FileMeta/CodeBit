@@ -88,21 +88,32 @@ https://FileMeta.org/CodeBit
             }
             catch (Exception err)
             {
-                Console.WriteLine(err.Message);
+                Console.Error.WriteLine(err.Message);
                 return -2;
             }
         }
 
         internal static int TestMain(string args) {
-            // No try/catch. Let the tester capture any exceptions.
-            ParseCommandLine(args);
-            if (s_operation is null)
-                throw new ApplicationException("ParseCommandLine failed to set an operation.");
-            return s_operation();
+            try {
+                ParseCommandLine(args);
+                if (s_operation is null)
+                    throw new ApplicationException("ParseCommandLine failed to set an operation.");
+                return s_operation();
+            }
+            catch (ApplicationException err) { // Only catch error-reporting exceptions. All others fall through and cause the test to fail.
+                Console.Error.WriteLine(err.Message);
+                return -2;
+            }
         }
 
         static void ParseCommandLine(string args)
         {
+            // Reset parsed values. This is mostly for unit tests that run multiple test with a single load. But it's good practice regardless.
+            s_operation = null;
+            s_target = string.Empty;
+            s_targetType = TargetType.Unknown;
+            s_version = null;
+
             TargetType defaultTargetType = TargetType.Unknown;
 
             var cl = new CommandLineLexer(args);

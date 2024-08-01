@@ -40,20 +40,18 @@ namespace CodeBit
                 if (!response.IsSuccessStatusCode)
                 {
                     var detail = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    throw new ApplicationException($"Failed to read {resourceType} from {url}. ({(int)response.StatusCode} {response.ReasonPhrase})\r\n{detail}");
+                    if (!string.Equals(detail, $"{(int)response.StatusCode}: {response.ReasonPhrase}"))
+                        detail = $"{(int)response.StatusCode}: {response.ReasonPhrase}\r\n{detail}";
+                    throw new ApplicationException($"Failed to read {resourceType} from {url}.\r\n{detail}");
                 }
                 return response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
             }
             catch (HttpRequestException err) {
-                if (err.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    throw new ApplicationException($"{resourceType} not found at {url} (404 Not Found).");
-                }
-                throw new ApplicationException($"{resourceType} not found at {url} ({err.Message})");
+                throw new ApplicationException($"Failed to read {resourceType} from {url}.\r\n{err.Message}");
             }
             catch (System.Net.Sockets.SocketException)
             {
-                throw new ApplicationException($"{resourceType} not found at {url} (DNS Lookup Failure)");
+                throw new ApplicationException($"Failed to read {resourceType} from {url}.\r\nHost not found.");
             }
         }
 

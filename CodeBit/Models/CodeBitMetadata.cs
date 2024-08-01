@@ -449,7 +449,7 @@ namespace CodeBit
                     continue;
                 }
 
-                var otherStr = otherValue is not null ? string.Join(';', pair.Value) : string.Empty;
+                var otherStr = string.Join(';', otherValue);
                 CompareOptionalStrings(thisStr, otherStr, ref validationLevel, validationDetail, pair.Key, thisLabel, otherLabel);
             }
             foreach(var pair in other)
@@ -468,7 +468,7 @@ namespace CodeBit
         {
             if (!string.Equals(thisStr, otherStr, strCmp))
             {
-                validationDetail.AppendLine($"Error: {thisLabel} '{property}' ({thisStr}) doesn't match {otherLabel} '{property}' ({otherStr}).");
+                validationDetail.AppendLine($"Error: {thisLabel} '{property}' ({thisStr}) does not match {otherLabel} '{property}' ({otherStr}).");
                 validationLevel |= ValidationLevel.FailMandatory;
             }
         }
@@ -477,7 +477,7 @@ namespace CodeBit
         {
             if (!string.Equals(thisStr, otherStr, strCmp))
             {
-                validationDetail.AppendLine($"Warning: {thisLabel} '{property}' ({thisStr}) doesn't match {otherLabel} '{property}' ({otherStr}).");
+                validationDetail.AppendLine($"Warning: {thisLabel} '{property}' ({thisStr}) does not match {otherLabel} '{property}' ({otherStr}).");
                 validationLevel |= ValidationLevel.FailRecommended;
             }
         }

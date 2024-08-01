@@ -22,12 +22,12 @@ namespace CodeBitUnitTest {
             Environment.CurrentDirectory = Path.Combine(path, c_testResourcesDir);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void T01_GetVersion() {
             TestAndValidate("GetVersion", "^CodeBit$", @"^Version \d+\.\d+\.\d+\.\d+");
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void T02_Validate_VideoFeedback() {
             TestAndValidate("Validate VideoFeedback.html",
                 "Local CodeBit metadata passes validation.",
@@ -37,8 +37,85 @@ namespace CodeBitUnitTest {
                 "File and Directory CodeBits match.");
         }
 
+        [TestMethod]
+        public void T03_Validate_Warning() {
+
+        }
+
+        [TestMethod]
+        public void T04_Validate_Error() {
+
+        }
+
+        [TestMethod]
+        public void T05_Validate_NotFound() {
+            TestAndValidate("Validate NotFound.html",
+                @"^CodeBit not found: NotFound\.html$");
+        }
+
+        [TestMethod]
+        public void T06_Validate_URL() {
+            TestAndValidate("Validate -url https://raw.githubusercontent.com/FileMeta/CodeBit/main/TestResources/VideoFeedback.html",
+                "Published CodeBit metadata passes validation.",
+                "Directory Entry metadata passes validation.",
+                "Published Metadata and Directory CodeBits match.");
+        }
+
+        [TestMethod]
+        public void T07_Validate_URL_404() {
+            TestAndValidate("Validate -url https://raw.githubusercontent.com/FileMeta/CodeBit/main/TestResources/NotPresent404.html",
+                "^Failed to read CodeBit from",
+                "^404: Not Found$");
+        }
+
+        [TestMethod]
+        public void T08_Validate_URL_BadDomain() {
+            TestAndValidate("Validate -url https://invalid.example.com/BadDomain.html",
+                "^Failed to read CodeBit from",
+                "[Hh]ost"); // The OS reports this error so a different platform might need a different variation on this.
+        }
+
+        [TestMethod]
+        public void T09_Validate_By_Name() {
+            TestAndValidate("Validate -name sample.codebit.net/VideoFeedback.html",
+                "Published CodeBit metadata passes validation.",
+                "Published and Directory CodeBits match.");
+        }
+
+        [TestMethod]
+        public void T10_Validate_By_Name_Version() {
+            TestAndValidate("Validate -name sample.codebit.net/VideoFeedback.html -v 1.0.0-alpha",
+                "Published CodeBit metadata passes validation.",
+                "Published and Directory CodeBits fail one or more recommended but optional comparisons:",
+                "Comment doesn't match");
+        }
+
+        [TestMethod]
+        public void T11_Validate_SampleDirectory() {
+            TestAndValidate("Validate -dir sample.codebit.net",
+                "^DNS Success",
+                "^Directory global metadata passes validation.$",
+                // Only one entry has to pass for the following tests to match
+                "^Directory Entry metadata passes validation.$",
+                "^Published CodeBit metadata passes validation.$",
+                "^Directory and Published CodeBits match.$",
+                // Only one entry has to have a warning for the following test to match
+                "Directory and Published CodeBits fail one or more recommended but optional comparisons:",
+                // Allow the test to pass even as more entries are added
+                @"^\d+ CodeBits in the directory.",
+                @"^\d+ CodeBits with comparison warnings.");
+        }
+
+        [TestMethod]
+        public void T15_ToJson_By_Url() {
+            TestAndValidate("ToJson -url https://raw.githubusercontent.com/FileMeta/CodeBit/509444cc55dcfba1e005ae1c439bed111c242193/TestResources/VideoFeedback.html",
+                "a");
+        }
+
+
+
         [TestMethod()]
-        public void T03_ToJson_VideoFeedback() {
+        public void T20_ToJson_VideoFeedback() {
             TestAndValidate("ToJson VideoFeedback.html");
         }
 
