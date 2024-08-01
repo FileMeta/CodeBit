@@ -39,6 +39,10 @@ namespace CodeBitUnitTest {
 
         [TestMethod]
         public void T03_Validate_Warning() {
+            TestAndValidate("Validate WarningCodebit.html",
+                "^Warning: Local CodeBit fails one or more recommended but optional requirements:$",
+                "Property 'datePublished' is an invalid format.",
+                "Multiple instances of property 'description'.");
 
         }
 
@@ -103,7 +107,22 @@ namespace CodeBitUnitTest {
                 "Directory and Published CodeBits fail one or more recommended but optional comparisons:",
                 // Allow the test to pass even as more entries are added
                 @"^\d+ CodeBits in the directory.",
-                @"^\d+ CodeBits with comparison warnings.");
+                @"^\d+ CodeBits with comparison warnings.",
+                @"^\d+ Non-CodeBit source code entries in the directory.",
+                @"^\d+ Non-Source Code entries in the directory.");
+        }
+
+        [TestMethod]
+        public void T12_Validate_BadDirectory() {
+            TestAndValidate("Validate -dir bad.codebit.net",
+                @"^\d+ CodeBits in the directory.",
+                @"^\d+ CodeBits failed validation.",
+                @"^\d+ CodeBits with validation warnings.",
+                @"^\d+ CodeBits failed comparison.",
+                @"^\d+ CodeBits with comparison warnings.",
+                @"^\d+ CodeBits in the directory.",
+                @"^\d+ Non-CodeBit source code entries in the directory.",
+                @"^\d+ Non-Source Code entries in the directory.");
         }
 
         [TestMethod]

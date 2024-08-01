@@ -358,9 +358,9 @@ namespace CodeBit
             }
 
             // === Optional Properties ===
-            if (ValidateOptionalSingle(key_description, ref validationLevel, validationDetail))
+            if (ValidateOptionalSingle(key_datePublished, ref validationLevel, validationDetail))
             {
-                if (DatePublishedStr != null && DatePublished == DateTime.MinValue)
+                if (DatePublishedStr != null && DatePublished == DateTimeOffset.MinValue)
                 {
                     validationLevel |= ValidationLevel.FailRecommended;
                     validationDetail.AppendLine("Property 'datePublished' is an invalid format. Must be RFC 3339");

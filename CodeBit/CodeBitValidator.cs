@@ -192,7 +192,7 @@ namespace CodeBit
                 if (nCompareFailures > 0) Console.WriteLine($"{nCompareFailures} CodeBits failed comparison.");
                 if (nCompareWarnings > 0) Console.WriteLine($"{nCompareWarnings} CodeBits with comparison warnings.");
                 if (nSourceCode > 0) Console.WriteLine($"{nSourceCode} Non-CodeBit source code entries in the directory.");
-                if (nOther > 0) Console.WriteLine($"{nOther} other entries in the directory.");
+                if (nOther > 0) Console.WriteLine($"{nOther} Non-Source Code entries in the directory.");
                 return nValidateFailures + nCompareFailures > 0 ? -1 : 0;
             }
         }
