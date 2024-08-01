@@ -128,17 +128,64 @@ namespace CodeBitUnitTest {
         }
 
         [TestMethod]
-        public void T15_ToJson_By_Url() {
+        public void T13_ToJson_VideoFeedback() {
+            TestAndValidate("ToJson VideoFeedback.html",
+                @"^{",
+                @"""@type"": ""SoftwareSourceCode""",
+                @"""keywords"": ""CodeBit""",
+                @"}$");
+        }
+
+        [TestMethod]
+        public void T14_ToJson_By_Url() {
             TestAndValidate("ToJson -url https://raw.githubusercontent.com/FileMeta/CodeBit/509444cc55dcfba1e005ae1c439bed111c242193/TestResources/VideoFeedback.html",
-                "a");
+                @"^{",
+                @"""@type"": ""SoftwareSourceCode""",
+                @"""version"": ""1.0.0-alpha""",
+                @"""keywords"": ""CodeBit""",
+                @"}$");
         }
 
-
-
-        [TestMethod()]
-        public void T20_ToJson_VideoFeedback() {
-            TestAndValidate("ToJson VideoFeedback.html");
+        [TestMethod]
+        public void T15_ToJson_By_Name() {
+            TestAndValidate("ToJson -name sample.codebit.net/VideoFeedback.html",
+                @"^{",
+                @"""@type"": ""SoftwareSourceCode""",
+                @"""version"": ""1.0.0""",
+                @"""keywords"": ""CodeBit""",
+                @"}$");
         }
+
+        [TestMethod]
+        public void T16_ToJson_By_NameVersion() {
+            TestAndValidate("ToJson -name sample.codebit.net/VideoFeedback.html -v 1.0.0-alpha",
+                @"^{",
+                @"""@type"": ""SoftwareSourceCode""",
+                @"""version"": ""1.0.0-alpha""",
+                @"""keywords"": ""CodeBit""",
+                @"}$");
+        }
+
+        [TestMethod]
+        public void T17_Directory_404() {
+            TestAndValidate("Validate -dir err404.codebit.net",
+                @"Failed to read Directory",
+                @"404: Not Found");
+        }
+
+        [TestMethod]
+        public void T18_Directory_BadDomain() {
+            TestAndValidate("Validate -dir baddomain.codebit.net",
+                @"Failed to read Directory",
+                @"[Hh]ost");
+        }
+
+        [TestMethod]
+        public void T18_Directory_NoRecord() {
+            TestAndValidate("Validate -dir phred.codebit.net",
+                @"^No dir TXT record found on domain");
+        }
+
 
 
 
