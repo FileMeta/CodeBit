@@ -43,12 +43,14 @@ namespace CodeBitUnitTest {
                 "^Warning: Local CodeBit fails one or more recommended but optional requirements:$",
                 "Property 'datePublished' is an invalid format.",
                 "Multiple instances of property 'description'.");
-
         }
 
         [TestMethod]
         public void T04_Validate_Error() {
-
+            TestAndValidate("Validate ErrorCodebit.html",
+                "^Error: Local CodeBit fails one or more mandatory requirements:$",
+                "Property 'name' is required but not present.",
+                "Property 'url' is required but not present.");
         }
 
         [TestMethod]
