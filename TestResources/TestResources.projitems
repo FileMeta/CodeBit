@@ -9,6 +9,7 @@
     <Import_RootNamespace>TestResources</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)bad.codebit.net.directory.json" />
     <Content Include="$(MSBuildThisFileDirectory)HelloWorld.txt" />
     <Content Include="$(MSBuildThisFileDirectory)sample.codebit.net.directory.json" />
     <Content Include="$(MSBuildThisFileDirectory)VideoFeedback.html" />
