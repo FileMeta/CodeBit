@@ -29,6 +29,18 @@
       "comment": "Missing author. Duplicate license."
     },
     {
+      "@type": "SoftwareSourceCode",
+      "name": "sample.codebit.net/VideoFeedback.html",
+      "description": "CodeBit demo of WebRTC video.",
+      "url": "https://raw.githubusercontent.com/FileMeta/CodeBit/509444cc55dcfba1e005ae1c439bed111c242193/TestResources/VideoFeedback.html",
+      "version": "1.0.0-alpha",
+      "keywords": "CodeBit",
+      "datePublished": "2023-16-17T15:36:00",
+      "license": "https://opensource.org/somelicense",
+      "hash": "SHA256:2844959D98FDB916E53C26EB1DC5E8EA546D8F56D4809D50FEAEB97FB6DA6362",
+      "comment": "Missing author. Invalid date."
+    },
+    {
       "@type": "ImageObject",
       "description": "Bollard Icon",
       "keywords": [ "bollard", "icon", "graphic" ],
@@ -58,6 +70,13 @@
       "license": "https://opensource.org/license/unlicense/",
       "hash": "SHA256:123456789FDB916E53C26EB1DC5E8EA546D8F56D4809D50FEAEB97FB6DA6362",
       "comment": "Missing required fields."
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "name": "FileMeta.org/GitHubPages-docker-compose.yml",
+      "description": "A docker-compose file that supports local testing of a GitHub pages site.",
+      "url": "https://raw.githubusercontent.com/bredd/brandtredd.github.io/master/docker-compose.yml",
+      "comment": "Example of source a source code entry that's not a codebit."
     }
   ]
 }
